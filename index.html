@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #008080; /* Deep turquoise blue */
+      background: #008080;
       margin: 0;
       padding: 0;
     }
@@ -39,6 +39,39 @@
       color: #555;
       margin-bottom: 24px;
     }
+    .input-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      font-size: 1em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .output {
+      margin-bottom: 18px;
+      text-align: center;
+      font-weight: bold;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #aaa;
+    }
     .footer {
       text-align: center;
       color: #aaa;
@@ -46,6 +79,8 @@
       margin-top: 24px;
     }
   </style>
+  <!-- Ethers.js for wallet connection -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -53,29 +88,99 @@
     <h1>Private Sale: MAZOL (MZLx) Tokens</h1>
     <div class="subtitle">Blockchain Powered Trust-Grade Training and Marketplace Solutions</div>
     <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain).<br>1 MZLx = 0.15 USDT</div>
-    <div id="buy-widget"></div>
+    <div class="input-group">
+      <label for="usdtAmount">Enter USDT Amount</label>
+      <input type="number" id="usdtAmount" min="0.15" step="0.01" placeholder="e.g. 15" />
+    </div>
+    <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
+    <button id="connectBtn">Connect Wallet</button>
+    <button id="buyBtn" disabled>Buy MZLx</button>
     <div class="footer">Powered by thirdweb</div>
   </div>
-  <script type="module">
-    import { BuyWidget } from "https://esm.sh/thirdweb/react";
-    import { bnb } from "https://esm.sh/thirdweb/chains";
-    import { createThirdwebClient } from "https://esm.sh/thirdweb";
+  <script>
+    // === CONFIGURATION ===
+    const TOKEN_PRICE = 0.15; // 1 MZLx = 0.15 USDT
+    const MZLX_ADDRESS = "0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83";
+    const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
+    const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
+    const BNB_CHAIN_ID = 56;
 
-    // Create the client
-    const client = createThirdwebClient({ clientId: "b463c954586e671f1157d92f5cce2632" });
+    // === ERC20 ABI (minimal) ===
+    const ERC20_ABI = [
+      "function approve(address spender, uint256 amount) public returns (bool)",
+      "function transfer(address to, uint256 amount) public returns (bool)",
+      "function decimals() view returns (uint8)",
+      "function balanceOf(address owner) view returns (uint256)"
+    ];
 
-    // Render the BuyWidget
-    BuyWidget.render({
-      client,
-      chain: bnb,
-      tokenAddress: "0x55d398326f99059fF775485246999027B3197955", // USDT on BNB Chain
-      amount: "15", // Default amount, user can change
-      container: document.getElementById("buy-widget"),
-      theme: "light",
-      title: "Buy MZLx with USDT",
-      description: "1 MZLx = 0.15 USDT. Pay with USDT or Card (if available).",
-      icon: "https://i.imgur.com/gaCl9Zz.jpeg",
+    let provider, signer, userAddress, usdtDecimals, mzlxDecimals;
+
+    // === UI Elements ===
+    const usdtInput = document.getElementById("usdtAmount");
+    const mzlxOutput = document.getElementById("mzlxOutput");
+    const connectBtn = document.getElementById("connectBtn");
+    const buyBtn = document.getElementById("buyBtn");
+
+    // Live calculation
+    usdtInput.addEventListener("input", () => {
+      const usdt = parseFloat(usdtInput.value) || 0;
+      const mzlx = usdt > 0 ? usdt / TOKEN_PRICE : 0;
+      mzlxOutput.textContent = `You will receive: ${mzlx.toLocaleString(undefined, {maximumFractionDigits: 2})} MZLx`;
+      buyBtn.disabled = !userAddress || usdt < TOKEN_PRICE;
     });
+
+    // Connect wallet
+    connectBtn.onclick = async () => {
+      if (!window.ethereum) {
+        alert("Please install MetaMask or a compatible wallet.");
+        return;
+      }
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]); // 0x38 = 56
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        connectBtn.textContent = "Wallet Connected";
+        connectBtn.disabled = true;
+        buyBtn.disabled = (parseFloat(usdtInput.value) || 0) < TOKEN_PRICE;
+        // Get decimals
+        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
+        usdtDecimals = await usdtContract.decimals();
+        const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, provider);
+        mzlxDecimals = await mzlxContract.decimals();
+      } catch (err) {
+        alert("Wallet connection failed: " + (err.info?.error?.message || err.message || err));
+      }
+    };
+
+    // Buy MZLx
+    buyBtn.onclick = async () => {
+      try {
+        const usdtAmount = parseFloat(usdtInput.value);
+        if (!usdtAmount || usdtAmount < TOKEN_PRICE) throw new Error("Enter a valid USDT amount.");
+        const mzlxAmount = usdtAmount / TOKEN_PRICE;
+
+        // 1. Send USDT to receiver
+        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
+        const usdtValue = ethers.parseUnits(usdtAmount.toString(), usdtDecimals);
+        const usdtBalance = await usdtContract.balanceOf(userAddress);
+        if (usdtBalance < usdtValue) throw new Error("Insufficient USDT balance.");
+        const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
+        buyBtn.textContent = "Paying USDT...";
+        await usdtTx.wait();
+
+        // 2. Send MZLx to buyer (from your wallet, must be automated by backend or done manually)
+        // For security, this step should be handled by your backend/admin wallet, not the buyer's wallet.
+        // Here, we just show a message.
+        buyBtn.textContent = "USDT sent! Awaiting MZLx delivery...";
+        alert("USDT sent! Please contact admin to receive your MZLx tokens.");
+
+        buyBtn.textContent = "Buy MZLx";
+      } catch (err) {
+        alert("Transaction failed: " + (err.info?.error?.message || err.message || err));
+        buyBtn.textContent = "Buy MZLx";
+      }
+    };
   </script>
 </body>
 </html>
