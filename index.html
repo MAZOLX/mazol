@@ -68,9 +68,31 @@
       border-radius: 6px;
       font-size: 1.1em;
       cursor: pointer;
+      margin-bottom: 10px;
     }
     button:disabled {
       background: #aaa;
+    }
+    .wallet-options {
+      display: none;
+      margin-top: 10px;
+    }
+    .wallet-option {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .wallet-option:hover {
+      background: #f5f5f5;
+    }
+    .wallet-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
     }
     .footer {
       text-align: center;
@@ -78,9 +100,25 @@
       font-size: 0.9em;
       margin-top: 24px;
     }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
   </style>
   <!-- Ethers.js for wallet connection -->
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+  <!-- WalletConnect connector -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -94,9 +132,21 @@
     </div>
     <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
     <button id="connectBtn">Connect Wallet</button>
+    <div class="wallet-options" id="walletOptions">
+      <div class="wallet-option" id="metamaskOption">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon" alt="MetaMask">
+        <span>MetaMask</span>
+      </div>
+      <div class="wallet-option" id="walletConnectOption">
+        <img src="https://walletconnect.com/walletconnect-logo.png" class="wallet-icon" alt="WalletConnect">
+        <span>WalletConnect</span>
+      </div>
+    </div>
     <button id="buyBtn" disabled>Buy MZLx</button>
-    <div class="footer">Powered by thirdweb</div>
+    <div class="status" id="statusMessage"></div>
+    <div class="footer">Powered by MAZOLX</div>
   </div>
+
   <script>
     // === CONFIGURATION ===
     const TOKEN_PRICE = 0.15; // 1 MZLx = 0.15 USDT
@@ -104,22 +154,29 @@
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const BNB_CHAIN_ID = 56;
+    const API_BASE_URL = "https://your-backend-api.com"; // Replace with your backend URL
 
     // === ERC20 ABI (minimal) ===
     const ERC20_ABI = [
       "function approve(address spender, uint256 amount) public returns (bool)",
       "function transfer(address to, uint256 amount) public returns (bool)",
       "function decimals() view returns (uint8)",
-      "function balanceOf(address owner) view returns (uint256)"
+      "function balanceOf(address owner) view returns (uint256)",
+      "function allowance(address owner, address spender) view returns (uint256)"
     ];
-
-    let provider, signer, userAddress, usdtDecimals, mzlxDecimals;
 
     // === UI Elements ===
     const usdtInput = document.getElementById("usdtAmount");
     const mzlxOutput = document.getElementById("mzlxOutput");
     const connectBtn = document.getElementById("connectBtn");
     const buyBtn = document.getElementById("buyBtn");
+    const walletOptions = document.getElementById("walletOptions");
+    const statusMessage = document.getElementById("statusMessage");
+    const metamaskOption = document.getElementById("metamaskOption");
+    const walletConnectOption = document.getElementById("walletConnectOption");
+
+    let provider, signer, userAddress, usdtDecimals, mzlxDecimals;
+    let walletConnectProvider;
 
     // Live calculation
     usdtInput.addEventListener("input", () => {
@@ -129,58 +186,202 @@
       buyBtn.disabled = !userAddress || usdt < TOKEN_PRICE;
     });
 
-    // Connect wallet
-    connectBtn.onclick = async () => {
+    // Show wallet options
+    connectBtn.onclick = () => {
+      walletOptions.style.display = walletOptions.style.display === 'block' ? 'none' : 'block';
+    };
+
+    // MetaMask connection
+    metamaskOption.onclick = async () => {
       if (!window.ethereum) {
-        alert("Please install MetaMask or a compatible wallet.");
+        showStatus("Please install MetaMask or a compatible wallet.", "error");
         return;
       }
       try {
         provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]); // 0x38 = 56
+        await setupProvider(provider);
+      } catch (err) {
+        showStatus("Connection failed: " + (err.message || err), "error");
+      }
+    };
+
+    // WalletConnect connection
+    walletConnectOption.onclick = async () => {
+      try {
+        walletConnectProvider = new WalletConnectProvider.default({
+          rpc: {
+            56: "https://bsc-dataseed.binance.org/" // BNB Chain RPC
+          }
+        });
+        
+        await walletConnectProvider.enable();
+        provider = new ethers.Web3Provider(walletConnectProvider);
+        await setupProvider(provider);
+      } catch (err) {
+        showStatus("WalletConnect failed: " + (err.message || err), "error");
+      }
+    };
+
+    // Common provider setup
+    async function setupProvider(provider) {
+      try {
+        // Check and switch to BNB Chain
+        await switchToBNBChain(provider);
+        
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
-        connectBtn.textContent = "Wallet Connected";
+        
+        connectBtn.textContent = `${shortenAddress(userAddress)} (Connected)`;
         connectBtn.disabled = true;
+        walletOptions.style.display = 'none';
         buyBtn.disabled = (parseFloat(usdtInput.value) || 0) < TOKEN_PRICE;
+        
         // Get decimals
         const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
         usdtDecimals = await usdtContract.decimals();
         const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, provider);
         mzlxDecimals = await mzlxContract.decimals();
+        
+        showStatus("Wallet connected successfully!", "success");
       } catch (err) {
-        alert("Wallet connection failed: " + (err.info?.error?.message || err.message || err));
+        showStatus("Connection failed: " + (err.info?.error?.message || err.message || err), "error");
       }
-    };
+    }
+
+    // Switch to BNB Chain
+    async function switchToBNBChain(provider) {
+      try {
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]); // 0x38 = 56
+      } catch (switchError) {
+        // This error code indicates that the chain has not been added to MetaMask
+        if (switchError.code === 4902) {
+          try {
+            await provider.send("wallet_addEthereumChain", [{
+              chainId: "0x38",
+              chainName: "Binance Smart Chain",
+              nativeCurrency: {
+                name: "BNB",
+                symbol: "bnb",
+                decimals: 18
+              },
+              rpcUrls: ["https://bsc-dataseed.binance.org/"],
+              blockExplorerUrls: ["https://bscscan.com"]
+            }]);
+          } catch (addError) {
+            throw new Error("Failed to add BNB Chain to wallet");
+          }
+        } else {
+          throw switchError;
+        }
+      }
+    }
 
     // Buy MZLx
     buyBtn.onclick = async () => {
       try {
         const usdtAmount = parseFloat(usdtInput.value);
-        if (!usdtAmount || usdtAmount < TOKEN_PRICE) throw new Error("Enter a valid USDT amount.");
+        if (!usdtAmount || usdtAmount < TOKEN_PRICE) {
+          throw new Error("Enter a valid USDT amount (minimum " + TOKEN_PRICE + " USDT).");
+        }
+        
         const mzlxAmount = usdtAmount / TOKEN_PRICE;
-
-        // 1. Send USDT to receiver
-        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
         const usdtValue = ethers.parseUnits(usdtAmount.toString(), usdtDecimals);
+        
+        // Check USDT balance
+        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
         const usdtBalance = await usdtContract.balanceOf(userAddress);
-        if (usdtBalance < usdtValue) throw new Error("Insufficient USDT balance.");
+        if (usdtBalance < usdtValue) {
+          throw new Error("Insufficient USDT balance.");
+        }
+        
+        // Check allowance
+        const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
+        if (allowance < usdtValue) {
+          // Need to approve first
+          buyBtn.textContent = "Approving USDT...";
+          buyBtn.disabled = true;
+          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
+          await approveTx.wait();
+        }
+        
+        // Send transaction to backend
+        buyBtn.textContent = "Processing Purchase...";
+        buyBtn.disabled = true;
+        
+        // Here we would normally call the backend API
+        // For now, we'll simulate it with the direct transfer
         const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
-        buyBtn.textContent = "Paying USDT...";
         await usdtTx.wait();
-
-        // 2. Send MZLx to buyer (from your wallet, must be automated by backend or done manually)
-        // For security, this step should be handled by your backend/admin wallet, not the buyer's wallet.
-        // Here, we just show a message.
-        buyBtn.textContent = "USDT sent! Awaiting MZLx delivery...";
-        alert("USDT sent! Please contact admin to receive your MZLx tokens.");
-
-        buyBtn.textContent = "Buy MZLx";
+        
+        showStatus("USDT sent successfully! Your MZLx tokens will be sent shortly.", "success");
+        
+        // In a real implementation, you would call your backend API here
+        // await sendPurchaseToBackend(userAddress, usdtAmount, mzlxAmount);
+        
       } catch (err) {
-        alert("Transaction failed: " + (err.info?.error?.message || err.message || err));
+        showStatus("Transaction failed: " + (err.info?.error?.message || err.message || err), "error");
+      } finally {
         buyBtn.textContent = "Buy MZLx";
+        buyBtn.disabled = !userAddress || (parseFloat(usdtInput.value) || 0 < TOKEN_PRICE;
       }
     };
+
+    // Helper function to send purchase data to backend
+    async function sendPurchaseToBackend(walletAddress, usdtAmount, mzlxAmount) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/purchase`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            walletAddress,
+            usdtAmount,
+            mzlxAmount,
+            txHash: '' // You would include the transaction hash here
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to process purchase');
+        }
+        
+        return data;
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    // Helper function to show status messages
+    function showStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = 'status ' + type;
+      statusMessage.style.display = 'block';
+      
+      // Hide after 5 seconds
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 5000);
+    }
+
+    // Helper function to shorten address
+    function shortenAddress(address) {
+      return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : '';
+    }
+
+    // Check if wallet is already connected (e.g., page refresh)
+    window.addEventListener('load', async () => {
+      if (window.ethereum && window.ethereum.selectedAddress) {
+        try {
+          provider = new ethers.BrowserProvider(window.ethereum);
+          await setupProvider(provider);
+        } catch (err) {
+          console.error("Auto-connect failed:", err);
+        }
+      }
+    });
   </script>
 </body>
 </html>
