@@ -6,7 +6,7 @@ const { ethers } = require('ethers');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ===== CONFIGURATION ===== //
+// Configuration
 const BNB_RPC_URL = process.env.BNB_RPC_URL || 'https://bsc-dataseed.binance.org/';
 const MZLX_ADDRESS = process.env.MZLX_ADDRESS || '0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83';
 const USDT_ADDRESS = process.env.USDT_ADDRESS || '0x55d398326f99059fF775485246999027B3197955';
@@ -17,7 +17,7 @@ if (!ADMIN_PRIVATE_KEY) {
   process.exit(1);
 }
 
-// ===== SETUP ===== //
+// Setup
 const provider = new ethers.JsonRpcProvider(BNB_RPC_URL);
 const adminWallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider);
 
@@ -31,11 +31,11 @@ const ERC20_ABI = [
 const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
 const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
 
-// ===== MIDDLEWARE ===== //
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ===== ROUTES ===== //
+// Routes
 app.post('/api/purchase', async (req, res) => {
   try {
     const { walletAddress, usdtAmount, mzlxAmount, txHash } = req.body;
@@ -80,16 +80,25 @@ app.post('/api/purchase', async (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'active',
-    chainId: 56,
-    adminWallet: adminWallet.address,
-    mzlxBalance: ethers.formatUnits(await mzlxContract.balanceOf(adminWallet.address), await mzlxContract.decimals())
-  });
+// Fixed Health Check Endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    const balance = await mzlxContract.balanceOf(adminWallet.address);
+    const decimals = await mzlxContract.decimals();
+    const formattedBalance = ethers.formatUnits(balance, decimals);
+    
+    res.json({ 
+      status: 'active',
+      chainId: 56,
+      adminWallet: adminWallet.address,
+      mzlxBalance: formattedBalance
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch balance' });
+  }
 });
 
-// ===== START SERVER ===== //
+// Start server
 app.listen(PORT, () => {
   console.log(`MAZOL Token Sale Backend running on port ${PORT}`);
   console.log(`Admin Wallet: ${adminWallet.address}`);
