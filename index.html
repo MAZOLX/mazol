@@ -4,82 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Private Sale: MAZOL (MZLx) Tokens</title>
-  <script src="https://unpkg.com/@thirdweb-dev/wallets@latest/dist/thirdweb-wallets.umd.js"></script>
-  <script src="https://unpkg.com/@thirdweb-dev/sdk@latest/dist/thirdweb-sdk.umd.js"></script>
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
+    body {
+      font-family: Arial, sans-serif;
       background: #008080; /* Deep turquoise blue */
-      margin: 0; 
-      padding: 0; 
+      margin: 0;
+      padding: 0;
     }
-    .container { 
-      max-width: 420px; 
-      margin: 20px auto; /* Reduced space above */
-      background: #fff; 
-      border-radius: 12px; 
-      box-shadow: 0 2px 12px #0001; 
-      padding: 32px; 
+    .container {
+      max-width: 420px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px #0001;
+      padding: 32px;
+      text-align: center;
     }
-    .logo { 
-      width: 120px; /* Increased by 50% from 80px */
-      margin: 0 auto 16px auto; 
-      display: block; 
-      border-radius: 50%; 
+    .logo {
+      width: 120px;
+      margin: 0 auto 16px auto;
+      display: block;
+      border-radius: 50%;
     }
-    h1 { 
-      text-align: center; 
-      font-size: 1.4em; 
-      margin-bottom: 8px; 
+    h1 {
+      font-size: 1.4em;
+      margin-bottom: 8px;
     }
-    .subtitle { 
-      text-align: center; 
-      color: #1a73e8; 
-      font-size: 1em; 
-      margin-bottom: 24px; 
+    .subtitle {
+      color: #1a73e8;
+      font-size: 1em;
+      margin-bottom: 24px;
     }
-    .desc { 
-      text-align: center; 
-      color: #555; 
-      margin-bottom: 24px; 
+    .desc {
+      color: #555;
+      margin-bottom: 24px;
     }
-    .input-group { 
-      margin-bottom: 18px; 
-    }
-    label { 
-      display: block; 
-      margin-bottom: 6px; 
-    }
-    input[type="number"] { 
-      width: 100%; 
-      padding: 8px; 
-      font-size: 1em; 
-      border-radius: 6px; 
-      border: 1px solid #ccc; 
-    }
-    .output { 
-      margin-bottom: 18px; 
-      text-align: center; 
-      font-weight: bold; 
-    }
-    button { 
-      width: 100%; 
-      padding: 12px; 
-      background: #1a73e8; 
-      color: #fff; 
-      border: none; 
-      border-radius: 6px; 
-      font-size: 1.1em; 
-      cursor: pointer; 
-    }
-    button:disabled { 
-      background: #aaa; 
-    }
-    .footer { 
-      text-align: center; 
-      color: #aaa; 
-      font-size: 0.9em; 
-      margin-top: 24px; 
+    .footer {
+      text-align: center;
+      color: #aaa;
+      font-size: 0.9em;
+      margin-top: 24px;
     }
   </style>
 </head>
@@ -88,73 +52,30 @@
     <img class="logo" src="https://i.imgur.com/gaCl9Zz.jpeg" alt="MAZOL Logo" />
     <h1>Private Sale: MAZOL (MZLx) Tokens</h1>
     <div class="subtitle">Blockchain Powered Trust-Grade Training and Marketplace Solutions</div>
-    <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain).<br>1 MZLx = <span id="tokenPrice">0.15</span> USDT</div>
-    <div class="input-group">
-      <label for="usdtAmount">Enter USDT Amount</label>
-      <input type="number" id="usdtAmount" min="0.15" step="0.01" placeholder="e.g. 15" />
-    </div>
-    <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
-    <button id="connectBtn">Connect Wallet & Buy</button>
+    <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain).<br>1 MZLx = 0.15 USDT</div>
+    <div id="buy-widget"></div>
     <div class="footer">Powered by thirdweb</div>
   </div>
   <script type="module">
-    // === CONFIGURATION ===
-    const TOKEN_PRICE = 0.15; // 1 MZLx = 0.15 USDT (edit this value to change price)
-    const MZLX_ADDRESS = "0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83";
-    const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
-    const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
-    const BNB_CHAIN_ID = 56;
-    const CLIENT_ID = "b463c954586e671f1157d92f5cce2632"; // Your thirdweb project clientId
+    import { BuyWidget } from "https://esm.sh/thirdweb/react";
+    import { bnb } from "https://esm.sh/thirdweb/chains";
+    import { createThirdwebClient } from "https://esm.sh/thirdweb";
 
-    // === UI LOGIC ===
-    const usdtInput = document.getElementById("usdtAmount");
-    const mzlxOutput = document.getElementById("mzlxOutput");
-    const connectBtn = document.getElementById("connectBtn");
-    const tokenPriceSpan = document.getElementById("tokenPrice");
-    tokenPriceSpan.textContent = TOKEN_PRICE;
+    // Create the client
+    const client = createThirdwebClient({ clientId: "b463c954586e671f1157d92f5cce2632" });
 
-    usdtInput.addEventListener("input", () => {
-      const usdt = parseFloat(usdtInput.value) || 0;
-      const mzlx = usdt > 0 ? usdt / TOKEN_PRICE : 0;
-      mzlxOutput.textContent = `You will receive: ${mzlx.toLocaleString(undefined, {maximumFractionDigits: 2})} MZLx`;
+    // Render the BuyWidget
+    BuyWidget.render({
+      client,
+      chain: bnb,
+      tokenAddress: "0x55d398326f99059fF775485246999027B3197955", // USDT on BNB Chain
+      amount: "15", // Default amount, user can change
+      container: document.getElementById("buy-widget"),
+      theme: "light",
+      title: "Buy MZLx with USDT",
+      description: "1 MZLx = 0.15 USDT. Pay with USDT or Card (if available).",
+      icon: "https://i.imgur.com/gaCl9Zz.jpeg",
     });
-
-    // === WALLET & PAYMENT LOGIC ===
-    import { createThirdwebClient, getContract, sendTransaction, prepareContractCall } from "https://esm.sh/thirdweb@latest";
-    import { inAppWallet } from "https://esm.sh/thirdweb/wallets@latest";
-    import { transfer } from "https://esm.sh/thirdweb/extensions/erc20@latest";
-
-    let wallet, account, client;
-
-    connectBtn.onclick = async () => {
-      connectBtn.disabled = true;
-      connectBtn.textContent = "Connecting...";
-      try {
-        // 1. Connect wallet
-        client = createThirdwebClient({ clientId: CLIENT_ID });
-        wallet = inAppWallet();
-        account = await wallet.connect({ client, chain: BNB_CHAIN_ID });
-        // 2. Get USDT amount and calculate MZLx
-        const usdtAmount = parseFloat(usdtInput.value);
-        if (!usdtAmount || usdtAmount < TOKEN_PRICE) throw new Error("Enter a valid USDT amount.");
-        const mzlxAmount = usdtAmount / TOKEN_PRICE;
-        // 3. Send USDT to receiver
-        connectBtn.textContent = "Paying USDT...";
-        const usdtContract = await getContract({ client, address: USDT_ADDRESS, chain: BNB_CHAIN_ID });
-        const tx = transfer({ contract: usdtContract, to: RECEIVER_ADDRESS, amount: BigInt(Math.floor(usdtAmount * 1e18)) });
-        await sendTransaction({ account, transaction: tx });
-        // 4. Send MZLx to buyer
-        connectBtn.textContent = "Receiving MZLx...";
-        const mzlxContract = await getContract({ client, address: MZLX_ADDRESS, chain: BNB_CHAIN_ID });
-        const mzlxTx = transfer({ contract: mzlxContract, to: account.address, amount: BigInt(Math.floor(mzlxAmount * 1e18)) });
-        await sendTransaction({ account, transaction: mzlxTx });
-        connectBtn.textContent = "Success! Tokens sent.";
-      } catch (err) {
-        alert("Error: " + (err.message || err));
-        connectBtn.textContent = "Connect Wallet & Buy";
-      }
-      connectBtn.disabled = false;
-    };
   </script>
 </body>
 </html>
