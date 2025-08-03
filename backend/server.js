@@ -6,24 +6,19 @@ const { ethers } = require('ethers');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// BNB Chain configuration
+// ===== CONFIGURATION ===== //
 const BNB_RPC_URL = process.env.BNB_RPC_URL || 'https://bsc-dataseed.binance.org/';
-const provider = new ethers.JsonRpcProvider(BNB_RPC_URL);
-
-// Token addresses
-const MZLX_ADDRESS = '0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83';
-const USDT_ADDRESS = '0x55d398326f99059fF775485246999027B3197955';
-
-// Admin wallet
+const MZLX_ADDRESS = process.env.MZLX_ADDRESS || '0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83';
+const USDT_ADDRESS = process.env.USDT_ADDRESS || '0x55d398326f99059fF775485246999027B3197955';
 const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
+
 if (!ADMIN_PRIVATE_KEY) {
-  console.error('ERROR: ADMIN_PRIVATE_KEY is not set in .env file');
+  console.error('ERROR: Missing ADMIN_PRIVATE_KEY in .env file');
   process.exit(1);
 }
+
+// ===== SETUP ===== //
+const provider = new ethers.JsonRpcProvider(BNB_RPC_URL);
 const adminWallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider);
 
 // ERC20 ABI
@@ -33,15 +28,18 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)"
 ];
 
-// Create contract instances
 const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
 const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
 
-// API endpoint to process purchases
+// ===== MIDDLEWARE ===== //
+app.use(cors());
+app.use(express.json());
+
+// ===== ROUTES ===== //
 app.post('/api/purchase', async (req, res) => {
   try {
     const { walletAddress, usdtAmount, mzlxAmount, txHash } = req.body;
-    
+
     // Validate input
     if (!ethers.isAddress(walletAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
@@ -49,61 +47,50 @@ app.post('/api/purchase', async (req, res) => {
     if (isNaN(usdtAmount) || usdtAmount <= 0) {
       return res.status(400).json({ error: 'Invalid USDT amount' });
     }
-    if (!txHash || !txHash.match(/^0x[a-fA-F0-9]{64}$/)) {
+    if (!txHash || !/^0x([A-Fa-f0-9]{64})$/.test(txHash)) {
       return res.status(400).json({ error: 'Invalid transaction hash' });
     }
-    
-    // Verify the transaction
+
+    // Verify transaction
     const tx = await provider.getTransaction(txHash);
-    if (!tx) {
-      return res.status(400).json({ error: 'Transaction not found' });
-    }
-    
-    // Check transaction receipt
+    if (!tx) return res.status(400).json({ error: 'Transaction not found' });
+
     const receipt = await tx.wait();
     if (receipt.status !== 1) {
       return res.status(400).json({ error: 'Transaction failed' });
     }
-    
-    // Verify it's a USDT transfer to our address
-    if (tx.to.toLowerCase() !== USDT_ADDRESS.toLowerCase()) {
-      return res.status(400).json({ error: 'Invalid token transfer' });
-    }
-    
-    // Check if we have enough MZLx tokens
-    const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
-    const mzlxBalance = await mzlxContract.balanceOf(adminWallet.address);
-    if (mzlxBalance < mzlxValue) {
-      return res.status(400).json({ error: 'Insufficient MZLx tokens in reserve' });
-    }
-    
+
     // Send MZLx tokens
+    const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
     const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
     await sendTx.wait();
-    
-    return res.json({
+
+    res.json({
       success: true,
-      message: 'MZLx tokens sent successfully',
-      mzlxTxHash: sendTx.hash,
-      mzlxAmount: mzlxAmount
+      message: 'Tokens sent successfully',
+      transactionHash: sendTx.hash
     });
-    
+
   } catch (error) {
     console.error('Purchase error:', error);
-    return res.status(500).json({ 
-      error: error.message || 'Internal server error',
+    res.status(500).json({ 
+      error: error.message || 'Server error',
       details: error.reason || undefined
     });
   }
 });
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'active',
+    chainId: 56,
+    adminWallet: adminWallet.address,
+    mzlxBalance: ethers.formatUnits(await mzlxContract.balanceOf(adminWallet.address), await mzlxContract.decimals())
+  });
 });
 
-// Start server
+// ===== START SERVER ===== //
 app.listen(PORT, () => {
   console.log(`MAZOL Token Sale Backend running on port ${PORT}`);
-  console.log(`Admin wallet: ${adminWallet.address}`);
+  console.log(`Admin Wallet: ${adminWallet.address}`);
 });
