@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MAZOL (MZLx) Token Sale</title>
   <style>
     * {
@@ -16,11 +16,11 @@
       background: #008080;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
-      padding: 10px;
-      overflow: hidden;
-      touch-action: manipulation;
+      padding: 20px 10px;
+      overflow-y: auto;
+      touch-action: pan-y;
       -webkit-tap-highlight-color: transparent;
     }
     
@@ -33,7 +33,7 @@
       padding: 25px;
       text-align: center;
       position: relative;
-      overflow: hidden;
+      margin: 20px 0;
     }
     
     .logo {
@@ -130,7 +130,18 @@
     
     .wallet-options {
       display: none;
-      margin-top: 10px;
+      position: absolute;
+      bottom: 100%;
+      left: 25px;
+      right: 25px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 10px;
+      margin-bottom: 10px;
+      z-index: 100;
+      max-height: 200px;
+      overflow-y: auto;
     }
     
     .wallet-option {
@@ -207,6 +218,17 @@
       border-radius: 6px;
     }
     
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    }
+    
     @media (max-width: 480px) {
       .container {
         padding: 20px 15px;
@@ -226,12 +248,32 @@
         padding: 14px;
         font-size: 1em;
       }
+      
+      .wallet-options {
+        left: 15px;
+        right: 15px;
+      }
+    }
+    
+    @media (max-height: 700px) {
+      .wallet-options {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: calc(100% - 30px);
+        max-width: 350px;
+        max-height: 70vh;
+        bottom: auto;
+      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
 </head>
 <body>
+  <div class="overlay" id="overlay"></div>
+  
   <div class="container">
     <img class="logo" src="https://i.imgur.com/gaCl9Zz.jpeg" alt="MAZOL Logo" />
     <h1>Private Sale: MAZOL (MZLx) Tokens</h1>
@@ -267,12 +309,12 @@
 
   <script>
     // ===== CONFIGURATION ===== //
-    const TOKEN_PRICE = 0.15; // 1 MZLx = 0.15 USDT
+    const TOKEN_PRICE = 0.15;
     const MZLX_ADDRESS = "0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83";
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const BNB_CHAIN_ID = 56;
-    const API_BASE_URL = "https://mazol.onrender.com"; // UPDATE WITH YOUR BACKEND URL
+    const API_BASE_URL = "https://your-backend.onrender.com"; // UPDATE WITH YOUR BACKEND URL
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -284,6 +326,7 @@
     const metamaskOption = document.getElementById("metamaskOption");
     const walletConnectOption = document.getElementById("walletConnectOption");
     const walletInfo = document.getElementById("walletInfo");
+    const overlay = document.getElementById("overlay");
 
     // ===== STATE VARIABLES ===== //
     let provider = null;
@@ -304,6 +347,7 @@
       metamaskOption.addEventListener('click', connectMetaMask);
       walletConnectOption.addEventListener('click', connectWalletConnect);
       buyBtn.addEventListener('click', startPurchaseProcess);
+      overlay.addEventListener('click', closeWalletOptions);
       
       // Auto-connect if returning user
       if (window.ethereum && window.ethereum.selectedAddress) {
@@ -312,6 +356,30 @@
       
       // Initialize calculation
       updateMZLxOutput();
+    }
+
+    function closeWalletOptions() {
+      walletOptions.style.display = 'none';
+      overlay.style.display = 'none';
+    }
+
+    function toggleWalletOptions() {
+      if (walletOptions.style.display === 'block') {
+        closeWalletOptions();
+      } else {
+        walletOptions.style.display = 'block';
+        overlay.style.display = 'block';
+        
+        // Position dropdown for small screens
+        if (window.innerHeight < 700) {
+          walletOptions.style.position = 'fixed';
+          walletOptions.style.top = '50%';
+          walletOptions.style.left = '50%';
+          walletOptions.style.transform = 'translate(-50%, -50%)';
+          walletOptions.style.width = 'calc(100% - 30px)';
+          walletOptions.style.maxWidth = '350px';
+        }
+      }
     }
 
     // ===== REAL-TIME CALCULATION ===== //
@@ -333,11 +401,9 @@
     }
 
     // ===== WALLET CONNECTION ===== //
-    function toggleWalletOptions() {
-      walletOptions.style.display = walletOptions.style.display === 'block' ? 'none' : 'block';
-    }
-
     async function connectMetaMask() {
+      closeWalletOptions();
+      
       if (!window.ethereum) {
         showStatus("MetaMask not detected. Please install MetaMask first.", "error");
         return;
@@ -354,6 +420,8 @@
     }
 
     async function connectWalletConnect() {
+      closeWalletOptions();
+      
       try {
         showStatus("Connecting to WalletConnect...", "processing");
         walletConnectProvider = new WalletConnectProvider.default({
@@ -384,7 +452,6 @@
         connectBtn.disabled = true;
         walletInfo.textContent = `Connected: ${shortenAddress(userAddress)}`;
         walletInfo.style.display = "block";
-        walletOptions.style.display = 'none';
         
         // Get token decimals
         const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
