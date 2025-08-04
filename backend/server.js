@@ -1,4 +1,4 @@
- require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { ethers } = require('ethers');
@@ -63,7 +63,7 @@ app.get('/api/health', async (req, res) => {
 // Purchase Endpoint
 app.post('/api/purchase', async (req, res) => {
   try {
-    const { walletAddress, usdtAmount, mzlxAmount, txHash } = req.body;
+    const { walletAddress, usdtAmount, mzlxAmount } = req.body;
 
     // Validate input
     if (!ethers.isAddress(walletAddress)) {
@@ -71,20 +71,6 @@ app.post('/api/purchase', async (req, res) => {
     }
     if (isNaN(usdtAmount) || usdtAmount <= 0) {
       return res.status(400).json({ error: 'Invalid USDT amount' });
-    }
-    if (!txHash || !/^0x([A-Fa-f0-9]{64})$/.test(txHash)) {
-      return res.status(400).json({ error: 'Invalid transaction hash' });
-    }
-
-    // Verify transaction
-    const tx = await provider.getTransaction(txHash);
-    if (!tx) {
-      return res.status(404).json({ error: 'Transaction not found' });
-    }
-
-    const receipt = await tx.wait();
-    if (receipt.status !== 1) {
-      return res.status(400).json({ error: 'Transaction failed on-chain' });
     }
 
     // Send MZLx tokens
