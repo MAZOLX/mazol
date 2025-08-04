@@ -18,6 +18,7 @@ const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
 if (!ADMIN_PRIVATE_KEY || !/^[0-9a-fA-F]{64}$/.test(ADMIN_PRIVATE_KEY)) {
   console.error('ERROR: Invalid ADMIN_PRIVATE_KEY format in .env file');
   console.error('Private key should be 64 hexadecimal characters without 0x prefix');
+  console.error('Example: af3d1e48f1d1d8b5d7a3d6a9c8b4a7c8a3d6a9c8b4a7c8a3d6a9c8b4a7c8a3d6a9c8');
   process.exit(1);
 }
 
