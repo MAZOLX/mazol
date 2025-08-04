@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const { ethers } = require('ethers');
 const cron = require('node-cron');
-const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,7 +31,6 @@ const ERC20_ABI = [
 ];
 
 const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
-const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
 
 // Middleware
 app.use(cors());
@@ -40,6 +38,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ===== ROUTES ===== //
+
+// Redirect to frontend
+app.get('/', (req, res) => {
+  res.redirect('https://mazolx.github.io/mazol/');
+});
 
 // Health Check
 app.get('/api/health', async (req, res) => {
@@ -91,51 +94,8 @@ app.post('/api/purchase', async (req, res) => {
       return res.status(400).json({ error: 'Transaction failed on-chain' });
     }
 
-    // Check if transaction was to our receiver address
-    const receiverAddress = process.env.RECEIVER_ADDRESS || adminWallet.address;
-    if (tx.to.toLowerCase() !== USDT_ADDRESS.toLowerCase()) {
-      return res.status(400).json({ error: 'Not a USDT transaction' });
-    }
-
-    // Parse logs to verify transfer to our address
-    const iface = new ethers.Interface([
-      "event Transfer(address indexed from, address indexed to, uint256 value)"
-    ]);
-    
-    let transferFound = false;
-    for (const log of receipt.logs) {
-      try {
-        const parsedLog = iface.parseLog(log);
-        if (parsedLog && parsedLog.name === "Transfer") {
-          const [from, to, value] = parsedLog.args;
-          if (to.toLowerCase() === receiverAddress.toLowerCase()) {
-            transferFound = true;
-            break;
-          }
-        }
-      } catch (e) {
-        // Skip logs that can't be parsed
-      }
-    }
-    
-    if (!transferFound) {
-      return res.status(400).json({ error: 'No transfer to receiver found' });
-    }
-
-    // Convert amount to bigint
-    const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
-    
-    // Check admin balance
-    const adminBalance = await mzlxContract.balanceOf(adminWallet.address);
-    if (adminBalance < mzlxValue) {
-      return res.status(400).json({ 
-        error: 'Insufficient MZLx tokens in reserve',
-        available: ethers.formatUnits(adminBalance, await mzlxContract.decimals()),
-        required: mzlxAmount
-      });
-    }
-
     // Send MZLx tokens
+    const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
     const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
     const sendReceipt = await sendTx.wait();
     
@@ -162,15 +122,6 @@ app.post('/api/purchase', async (req, res) => {
   }
 });
 
-// Keep-alive function
-function pingServer() {
-  http.get(`http://localhost:${PORT}/api/health`, (res) => {
-    console.log(`[${new Date().toISOString()}] Health check: ${res.statusCode}`);
-  }).on('error', (err) => {
-    console.error(`Health check error: ${err.message}`);
-  });
-}
-
 // ===== START SERVER ===== //
 app.listen(PORT, () => {
   console.log(`\n🚀 MAZOL Token Sale Backend running on port ${PORT}`);
@@ -181,16 +132,6 @@ app.listen(PORT, () => {
   
   // Schedule keep-alive pings (every 5 minutes)
   cron.schedule('*/5 * * * *', () => {
-    console.log(`[${new Date().toISOString()}] Running keep-alive`);
-    pingServer();
+    console.log(`[${new Date().toISOString()}] Running health check...`);
   });
-  
-  // Initial ping
-  pingServer();
-});
-
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Server shutting down...');
-  process.exit(0);
 });
