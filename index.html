@@ -2,144 +2,230 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>MAZOL (MZLx) Token Sale</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
       font-family: Arial, sans-serif;
       background: #008080;
-      margin: 0;
-      padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 10px;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
+    
     .container {
+      width: 100%;
       max-width: 420px;
-      margin: 20px;
       background: #fff;
       border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-      padding: 32px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 25px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
+    
     .logo {
-      width: 120px;
-      margin: 0 auto 16px auto;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 15px auto;
       display: block;
       border-radius: 50%;
+      object-fit: cover;
     }
+    
     h1 {
-      font-size: 1.4em;
+      font-size: 1.3em;
       margin-bottom: 8px;
-      color: #333;
+      color: #222;
+      line-height: 1.3;
     }
+    
     .subtitle {
       color: #1a73e8;
-      font-size: 1em;
-      margin-bottom: 24px;
+      font-size: 0.95em;
+      margin-bottom: 20px;
+      line-height: 1.4;
     }
+    
     .desc {
       color: #555;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      font-size: 0.95em;
       line-height: 1.5;
     }
+    
     .input-group {
-      margin-bottom: 18px;
+      margin-bottom: 15px;
       text-align: left;
     }
+    
     label {
       display: block;
       margin-bottom: 6px;
       color: #333;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 0.95em;
     }
+    
     input[type="number"] {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       font-size: 1em;
-      border-radius: 6px;
+      border-radius: 8px;
       border: 1px solid #ddd;
-      box-sizing: border-box;
+      background: #f9f9f9;
+      -webkit-appearance: none;
     }
+    
     .output {
-      margin-bottom: 18px;
-      text-align: center;
+      margin-bottom: 15px;
+      padding: 12px;
+      background: #f0f9ff;
+      border-radius: 8px;
       font-weight: bold;
-      font-size: 1.1em;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 6px;
+      font-size: 1.05em;
+      color: #1a73e8;
     }
+    
     button {
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       background: #1a73e8;
       color: #fff;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 1.1em;
+      font-weight: 600;
       cursor: pointer;
-      margin-bottom: 10px;
-      transition: background 0.3s;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    button:hover {
+    
+    button:active {
+      transform: translateY(1px);
+    }
+    
+    button:hover:not(:disabled) {
       background: #0d5abf;
     }
+    
     button:disabled {
       background: #aaa;
       cursor: not-allowed;
+      opacity: 0.7;
     }
+    
     .wallet-options {
       display: none;
       margin-top: 10px;
     }
+    
     .wallet-option {
       display: flex;
       align-items: center;
-      padding: 12px;
-      margin-bottom: 8px;
+      justify-content: center;
+      padding: 14px;
+      margin-bottom: 10px;
       border: 1px solid #ddd;
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.2s;
+      background: #f8f9fa;
     }
+    
+    .wallet-option:active {
+      transform: translateY(1px);
+    }
+    
     .wallet-option:hover {
-      background: #f0f7ff;
+      background: #eef5ff;
     }
+    
     .wallet-icon {
       width: 24px;
       height: 24px;
       margin-right: 10px;
+      object-fit: contain;
     }
+    
     .footer {
       text-align: center;
-      color: #aaa;
-      font-size: 0.9em;
-      margin-top: 24px;
+      color: #999;
+      font-size: 0.85em;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
     }
+    
     .status {
       margin-top: 15px;
-      padding: 12px;
-      border-radius: 6px;
+      padding: 14px;
+      border-radius: 8px;
       display: none;
+      font-size: 0.95em;
+      line-height: 1.4;
     }
+    
     .status.success {
       background: #d4edda;
       color: #155724;
       border: 1px solid #c3e6cb;
     }
+    
     .status.error {
       background: #f8d7da;
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+    
+    .status.processing {
+      background: #cce5ff;
+      color: #004085;
+      border: 1px solid #b8daff;
+    }
+    
     .connected-wallet {
       font-size: 0.9em;
-      margin-top: 10px;
+      margin: 10px 0 15px;
       color: #28a745;
-      font-weight: bold;
+      font-weight: 600;
+      padding: 8px;
+      background: #e8f5e9;
+      border-radius: 6px;
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px 15px;
+        border-radius: 10px;
+      }
+      
+      h1 {
+        font-size: 1.2em;
+      }
+      
+      .logo {
+        width: 90px;
+        height: 90px;
+      }
+      
+      button {
+        padding: 14px;
+        font-size: 1em;
+      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
@@ -150,7 +236,7 @@
     <img class="logo" src="https://i.imgur.com/gaCl9Zz.jpeg" alt="MAZOL Logo" />
     <h1>Private Sale: MAZOL (MZLx) Tokens</h1>
     <div class="subtitle">Blockchain Powered Trust-Grade Training and Marketplace Solutions</div>
-    <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain).<br>1 MZLx = 0.15 USDT</div>
+    <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain)<br>1 MZLx = 0.15 USDT</div>
     
     <div class="input-group">
       <label for="usdtAmount">Enter USDT Amount</label>
@@ -186,7 +272,7 @@
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const BNB_CHAIN_ID = 56;
-    const API_BASE_URL = "https://your-backend.onrender.com"; // UPDATE THIS
+    const API_BASE_URL = "https://mazol.onrender.com"; // UPDATE WITH YOUR BACKEND URL
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -206,15 +292,18 @@
     let usdtDecimals = 18;
     let mzlxDecimals = 18;
     let walletConnectProvider = null;
+    let currentUSDTAmount = 0;
 
     // ===== INITIAL SETUP ===== //
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', initApp);
+    
+    function initApp() {
       // Initialize event listeners
-      usdtInput.addEventListener('input', updateMZLxOutput);
+      usdtInput.addEventListener('input', handleUSDTInput);
       connectBtn.addEventListener('click', toggleWalletOptions);
       metamaskOption.addEventListener('click', connectMetaMask);
       walletConnectOption.addEventListener('click', connectWalletConnect);
-      buyBtn.addEventListener('click', buyMZLxTokens);
+      buyBtn.addEventListener('click', startPurchaseProcess);
       
       // Auto-connect if returning user
       if (window.ethereum && window.ethereum.selectedAddress) {
@@ -223,12 +312,16 @@
       
       // Initialize calculation
       updateMZLxOutput();
-    });
+    }
 
     // ===== REAL-TIME CALCULATION ===== //
+    function handleUSDTInput() {
+      currentUSDTAmount = parseFloat(usdtInput.value) || 0;
+      updateMZLxOutput();
+    }
+
     function updateMZLxOutput() {
-      const usdtValue = parseFloat(usdtInput.value) || 0;
-      const mzlxAmount = usdtValue > 0 ? usdtValue / TOKEN_PRICE : 0;
+      const mzlxAmount = currentUSDTAmount > 0 ? currentUSDTAmount / TOKEN_PRICE : 0;
       
       mzlxOutput.textContent = `You will receive: ${mzlxAmount.toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -236,16 +329,12 @@
       })} MZLx`;
       
       // Update button state
-      buyBtn.disabled = !userAddress || usdtValue < TOKEN_PRICE;
+      buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
     // ===== WALLET CONNECTION ===== //
     function toggleWalletOptions() {
-      if (walletOptions.style.display === 'block') {
-        walletOptions.style.display = 'none';
-      } else {
-        walletOptions.style.display = 'block';
-      }
+      walletOptions.style.display = walletOptions.style.display === 'block' ? 'none' : 'block';
     }
 
     async function connectMetaMask() {
@@ -255,14 +344,9 @@
       }
       
       try {
-        // Create provider
+        showStatus("Connecting to MetaMask...", "processing");
         provider = new ethers.BrowserProvider(window.ethereum);
-        
-        // Setup provider
         await setupProvider(provider);
-        
-        // Update UI
-        walletOptions.style.display = 'none';
         showStatus("MetaMask connected successfully!", "success");
       } catch (err) {
         showStatus("MetaMask connection failed: " + (err.message || err), "error");
@@ -271,25 +355,15 @@
 
     async function connectWalletConnect() {
       try {
-        // Initialize WalletConnect
+        showStatus("Connecting to WalletConnect...", "processing");
         walletConnectProvider = new WalletConnectProvider.default({
-          rpc: {
-            56: "https://bsc-dataseed.binance.org/",
-          },
+          rpc: { 56: "https://bsc-dataseed.binance.org/" },
           chainId: 56,
         });
 
-        // Enable session
         await walletConnectProvider.enable();
-        
-        // Create provider
         provider = new ethers.Web3Provider(walletConnectProvider);
-        
-        // Setup provider
         await setupProvider(provider);
-        
-        // Update UI
-        walletOptions.style.display = 'none';
         showStatus("WalletConnect connected successfully!", "success");
       } catch (err) {
         showStatus("WalletConnect failed: " + (err.message || err), "error");
@@ -310,6 +384,7 @@
         connectBtn.disabled = true;
         walletInfo.textContent = `Connected: ${shortenAddress(userAddress)}`;
         walletInfo.style.display = "block";
+        walletOptions.style.display = 'none';
         
         // Get token decimals
         const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
@@ -334,16 +409,12 @@
             await provider.send("wallet_addEthereumChain", [{
               chainId: "0x38",
               chainName: "Binance Smart Chain",
-              nativeCurrency: { 
-                name: "BNB", 
-                symbol: "bnb", 
-                decimals: 18 
-              },
+              nativeCurrency: { name: "BNB", symbol: "bnb", decimals: 18 },
               rpcUrls: ["https://bsc-dataseed.binance.org/"],
               blockExplorerUrls: ["https://bscscan.com"]
             }]);
           } catch (addError) {
-            throw new Error("Failed to add BNB Chain to wallet");
+            throw new Error("Failed to add BNB Chain");
           }
         } else {
           throw switchError;
@@ -351,70 +422,78 @@
       }
     }
 
-    // ===== PURCHASE FUNCTIONALITY ===== //
-    async function buyMZLxTokens() {
-      const usdtValue = parseFloat(usdtInput.value);
-      
-      // Validate input
-      if (!usdtValue || usdtValue < TOKEN_PRICE) {
-        showStatus(`Please enter at least ${TOKEN_PRICE} USDT`, "error");
+    // ===== PURCHASE WORKFLOW ===== //
+    async function startPurchaseProcess() {
+      if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
+        showStatus("Please connect wallet and enter valid USDT amount", "error");
         return;
       }
       
       try {
-        // Calculate MZLx amount
-        const mzlxAmount = usdtValue / TOKEN_PRICE;
-        const usdtAmount = ethers.parseUnits(usdtValue.toString(), usdtDecimals);
+        // Calculate values
+        const mzlxAmount = currentUSDTAmount / TOKEN_PRICE;
+        const usdtValue = ethers.parseUnits(currentUSDTAmount.toString(), usdtDecimals);
         
-        // Check balance
+        // Step 1: Check balance
         const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
         const usdtBalance = await usdtContract.balanceOf(userAddress);
         
-        if (usdtBalance < usdtAmount) {
-          showStatus("Insufficient USDT balance", "error");
+        if (usdtBalance < usdtValue) {
+          showStatus(`Insufficient USDT balance. You need ${currentUSDTAmount} USDT`, "error");
           return;
         }
         
-        // Check allowance
+        // Step 2: Check/Set allowance
         const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
         
-        if (allowance < usdtAmount) {
+        if (allowance < usdtValue) {
           buyBtn.textContent = "Approving USDT...";
           buyBtn.disabled = true;
+          showStatus("Approving USDT spending... Please confirm in wallet", "processing");
           
-          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtAmount);
+          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
           await approveTx.wait();
+          
+          showStatus("USDT spending approved!", "success");
         }
         
-        // Send payment
-        buyBtn.textContent = "Processing Purchase...";
-        buyBtn.disabled = true;
+        // Step 3: Send USDT payment
+        buyBtn.textContent = "Processing Payment...";
+        showStatus("Sending USDT... Please confirm transaction", "processing");
         
-        const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtAmount);
-        await usdtTx.wait();
+        const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
+        const receipt = await usdtTx.wait();
         
-        // Show success message
-        showStatus(`Success! ${mzlxAmount.toFixed(2)} MZLx will be sent to your wallet shortly`, "success");
+        if (receipt.status !== 1) {
+          throw new Error("USDT transfer failed");
+        }
         
-        // Send to backend (for token distribution)
+        showStatus(`USDT ${currentUSDTAmount} sent successfully!`, "success");
+        
+        // Step 4: Send to backend for token distribution
+        buyBtn.textContent = "Processing Tokens...";
+        showStatus("Processing MZLx tokens...", "processing");
+        
         await sendToBackend({
           walletAddress: userAddress,
-          usdtAmount: usdtValue,
+          usdtAmount: currentUSDTAmount,
           mzlxAmount: mzlxAmount,
           txHash: usdtTx.hash
         });
         
+        showStatus(`Success! ${mzlxAmount.toFixed(2)} MZLx will arrive shortly`, "success");
+        
       } catch (err) {
-        showStatus("Transaction failed: " + (err.message || err), "error");
+        showStatus("Transaction failed: " + (err.reason || err.message || err), "error");
       } finally {
         buyBtn.textContent = "Buy MZLx";
-        updateMZLxOutput();
+        buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
       }
     }
 
     // ===== HELPER FUNCTIONS ===== //
     async function sendToBackend(data) {
-      if (!API_BASE_URL || API_BASE_URL === "https://your-backend.onrender.com") {
+      if (!API_BASE_URL) {
         console.log("Backend not configured. Skipping backend call.");
         return;
       }
@@ -429,8 +508,12 @@
         if (!response.ok) {
           throw new Error('Backend request failed');
         }
+        
+        const result = await response.json();
+        return result;
       } catch (err) {
         console.error("Backend error:", err);
+        throw new Error("Failed to process tokens. Contact support with TX: " + data.txHash);
       }
     }
 
@@ -439,10 +522,14 @@
       statusMessage.className = 'status ' + type;
       statusMessage.style.display = 'block';
       
-      // Auto-hide after 10 seconds
-      setTimeout(() => {
-        statusMessage.style.display = 'none';
-      }, 10000);
+      // Auto-hide success messages after 15 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          if (statusMessage.textContent === message) {
+            statusMessage.style.display = 'none';
+          }
+        }, 15000);
+      }
     }
 
     function shortenAddress(address) {
