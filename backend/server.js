@@ -14,8 +14,10 @@ const MZLX_ADDRESS = process.env.MZLX_ADDRESS || '0x49F4a728BD98480E92dBfc6a82d5
 const USDT_ADDRESS = process.env.USDT_ADDRESS || '0x55d398326f99059fF775485246999027B3197955';
 const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
 
-if (!ADMIN_PRIVATE_KEY) {
-  console.error('ERROR: Missing ADMIN_PRIVATE_KEY in .env file');
+// Validate private key format
+if (!ADMIN_PRIVATE_KEY || !/^[0-9a-fA-F]{64}$/.test(ADMIN_PRIVATE_KEY)) {
+  console.error('ERROR: Invalid ADMIN_PRIVATE_KEY format in .env file');
+  console.error('Private key should be 64 hexadecimal characters without 0x prefix');
   process.exit(1);
 }
 
@@ -62,6 +64,11 @@ app.post('/api/purchase', async (req, res) => {
       return res.status(400).json({ error: 'Transaction failed' });
     }
 
+    // Verify it's a USDT transfer to our address
+    if (tx.to.toLowerCase() !== USDT_ADDRESS.toLowerCase()) {
+      return res.status(400).json({ error: 'Not a USDT transaction' });
+    }
+
     // Send MZLx tokens
     const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
     const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
@@ -69,14 +76,15 @@ app.post('/api/purchase', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Tokens sent successfully',
-      transactionHash: sendTx.hash
+      message: 'MZLx tokens sent successfully',
+      mzlxTxHash: sendTx.hash,
+      mzlxAmount: mzlxAmount
     });
 
   } catch (error) {
     console.error('Purchase error:', error);
     res.status(500).json({ 
-      error: error.message || 'Server error',
+      error: error.message || 'Internal server error',
       details: error.reason || undefined
     });
   }
