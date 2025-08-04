@@ -152,7 +152,7 @@
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955"; // BSC USDT
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859"; // Your wallet to receive USDT
     const BNB_CHAIN_ID = 56;
-    const API_BASE_URL = "https://your-glitch-backend.glitch.me"; // Replace with your backend URL
+    const API_BASE_URL = "https://your-backend.onrender.com"; // Replace with your backend URL
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -231,7 +231,7 @@
         connectBtn.textContent = `${shortenAddress(userAddress)} (Connected)`;
         connectBtn.disabled = true;
         walletOptions.style.display = 'none';
-        buyBtn.disabled = (parseFloat(usdtInput.value) || 0) < TOKEN_PRICE;
+        updateMZLxOutput(); // Update button state based on input
         
         // Get token decimals
         const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
@@ -276,7 +276,7 @@
         const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
         await usdtTx.wait();
         
-        // Call backend (replace with your actual backend URL)
+        // Call backend
         const backendResponse = await sendToBackend({
           walletAddress: userAddress,
           usdtAmount: usdtAmount,
@@ -312,9 +312,21 @@
     }
 
     async function sendToBackend(data) {
-      // This is where you would call your actual backend
-      console.log("Would send to backend:", data);
-      return { success: true };
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || 'Backend request failed');
+        }
+        return result;
+      } catch (err) {
+        throw new Error('Failed to contact backend: ' + err.message);
+      }
     }
 
     function showStatus(message, type) {
