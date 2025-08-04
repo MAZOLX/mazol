@@ -13,31 +13,28 @@ const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
 
 // Validate private key
 if (!ADMIN_PRIVATE_KEY || !/^[0-9a-fA-F]{64}$/.test(ADMIN_PRIVATE_KEY)) {
-  console.error('ERROR: Invalid private key format - must be 64 hex characters');
+  console.error('ERROR: Invalid private key format');
   process.exit(1);
 }
 
 // Setup
 const provider = new ethers.JsonRpcProvider(BNB_RPC_URL);
 const adminWallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider);
-
-// ERC20 ABI
-const ERC20_ABI = [
-  "function transfer(address to, uint256 amount) public returns (bool)",
-  "function balanceOf(address owner) view returns (uint256)",
-  "function decimals() view returns (uint8)"
-];
-
-const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
+const mzlxContract = new ethers.Contract(
+  MZLX_ADDRESS,
+  [
+    "function transfer(address to, uint256 amount) public returns (bool)",
+    "function balanceOf(address owner) view returns (uint256)",
+    "function decimals() view returns (uint8)"
+  ],
+  adminWallet
+);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // ===== ROUTES ===== //
-
-// Health Check
 app.get('/api/health', async (req, res) => {
   try {
     const balance = await mzlxContract.balanceOf(adminWallet.address);
@@ -49,18 +46,13 @@ app.get('/api/health', async (req, res) => {
       chainId: 56,
       adminWallet: adminWallet.address,
       mzlxBalance: formattedBalance,
-      network: 'BNB Smart Chain',
-      lastChecked: new Date().toISOString()
+      network: 'BNB Smart Chain'
     });
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Failed to fetch balance',
-      details: error.message 
-    });
+    res.status(500).json({ error: 'Failed to fetch balance' });
   }
 });
 
-// Purchase Endpoint
 app.post('/api/purchase', async (req, res) => {
   try {
     const { walletAddress, usdtAmount, mzlxAmount } = req.body;
@@ -90,20 +82,15 @@ app.post('/api/purchase', async (req, res) => {
       mzlxTxHash: sendTx.hash,
       mzlxAmount: mzlxAmount,
       usdtAmount: usdtAmount,
-      receiver: walletAddress,
-      timestamp: new Date().toISOString()
+      receiver: walletAddress
     });
 
   } catch (error) {
     console.error('Purchase error:', error);
-    res.status(500).json({ 
-      error: error.message || 'Internal server error',
-      details: error.reason || undefined
-    });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Redirect to frontend
 app.get('/', (req, res) => {
   res.redirect('https://mazolx.github.io/mazol/');
 });
@@ -112,6 +99,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 MAZOL Token Sale Backend running on port ${PORT}`);
   console.log(`🔐 Admin Wallet: ${adminWallet.address}`);
-  console.log(`🔗 RPC Provider: ${BNB_RPC_URL}`);
   console.log(`💎 MZLX Contract: ${MZLX_ADDRESS}`);
 });
