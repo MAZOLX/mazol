@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { ethers } = require('ethers');
+const cron = require('node-cron');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,7 +82,7 @@ app.post('/api/purchase', async (req, res) => {
   }
 });
 
-// Fixed Health Check Endpoint
+// Health Check Endpoint
 app.get('/api/health', async (req, res) => {
   try {
     const balance = await mzlxContract.balanceOf(adminWallet.address);
@@ -98,8 +100,44 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Self-ping function to keep instance awake
+function pingServer() {
+  const baseUrl = `http://localhost:${PORT}`;
+  const healthUrl = `${baseUrl}/api/health`;
+  
+  console.log(`[${new Date().toISOString()}] Pinging server to keep awake...`);
+  
+  http.get(healthUrl, (response) => {
+    let data = '';
+    response.on('data', (chunk) => data += chunk);
+    response.on('end', () => {
+      console.log(`[${new Date().toISOString()}] Ping successful: ${response.statusCode}`);
+    });
+  }).on('error', (err) => {
+    console.error(`[${new Date().toISOString()}] Ping error: ${err.message}`);
+  });
+}
+
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`MAZOL Token Sale Backend running on port ${PORT}`);
   console.log(`Admin Wallet: ${adminWallet.address}`);
+  
+  // Start cron job after server starts
+  cron.schedule('*/5 * * * *', () => {
+    console.log(`[${new Date().toISOString()}] Running keep-alive cron job`);
+    pingServer();
+  });
+  
+  // Initial ping
+  pingServer();
+});
+
+// Handle graceful shutdown
+process.on('SIGINT', () => {
+  console.log('Shutting down server...');
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
 });
