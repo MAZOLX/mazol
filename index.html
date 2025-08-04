@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -297,88 +297,6 @@
       vertical-align: middle;
     }
     
-    .transaction-modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      z-index: 103;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    }
-    
-    .modal-content {
-      text-align: center;
-    }
-    
-    .modal-title {
-      font-size: 1.3rem;
-      margin-bottom: 15px;
-      color: #1a73e8;
-      font-weight: 700;
-    }
-    
-    .modal-details {
-      margin-bottom: 20px;
-      text-align: left;
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 10px;
-      border: 1px solid #eee;
-    }
-    
-    .modal-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    
-    .modal-label {
-      font-weight: 600;
-      color: #555;
-    }
-    
-    .modal-value {
-      font-weight: 600;
-      color: #222;
-    }
-    
-    .modal-actions {
-      display: flex;
-      gap: 15px;
-    }
-    
-    .modal-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .modal-confirm {
-      background: linear-gradient(to right, #1a73e8, #0d5abf);
-      color: white;
-      border: none;
-    }
-    
-    .modal-cancel {
-      background: #f0f0f0;
-      color: #555;
-      border: 1px solid #ddd;
-    }
-    
-    .modal-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -408,10 +326,6 @@
         padding: 20px;
         width: calc(100% - 30px);
       }
-      
-      .transaction-modal {
-        padding: 20px;
-      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
@@ -422,7 +336,7 @@
   
   <div class="wallet-options" id="walletOptions">
     <div class="close-btn" id="closeWalletBtn">×</div>
-    <h3 style="margin-bottom:20px; color:#333;">Connect Wallet</h3>
+    <h3 style="margin-bottom:20px; color:#333;">Connect Wallet to Buy</h3>
     <div class="wallet-option" id="metamaskOption">
       <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon" alt="MetaMask">
       <span>MetaMask</span>
@@ -430,38 +344,6 @@
     <div class="wallet-option" id="walletConnectOption">
       <img src="https://avatars.githubusercontent.com/u/37784886" class="wallet-icon" alt="WalletConnect">
       <span>WalletConnect</span>
-    </div>
-  </div>
-  
-  <div class="transaction-modal" id="transactionModal">
-    <div class="modal-content">
-      <h3 class="modal-title">Confirm Transaction</h3>
-      <div class="modal-details">
-        <div class="modal-row">
-          <span class="modal-label">You Pay:</span>
-          <span class="modal-value" id="modalUsdt">0 USDT</span>
-        </div>
-        <div class="modal-row">
-          <span class="modal-label">You Receive:</span>
-          <span class="modal-value" id="modalMzlx">0 MZLx</span>
-        </div>
-        <div class="modal-row">
-          <span class="modal-label">Token Price:</span>
-          <span class="modal-value">1 MZLx = 0.15 USDT</span>
-        </div>
-        <div class="modal-row">
-          <span class="modal-label">Network Fee:</span>
-          <span class="modal-value">≈ $0.50 - $1.50 (Paid in BNB)</span>
-        </div>
-        <div class="modal-row">
-          <span class="modal-label">Receiver:</span>
-          <span class="modal-value" style="font-size:0.8rem;">0x4bd...3D859</span>
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn modal-cancel" id="modalCancel">Cancel</button>
-        <button class="modal-btn modal-confirm" id="modalConfirm">Confirm</button>
-      </div>
     </div>
   </div>
   
@@ -478,13 +360,11 @@
     
     <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
     
-    <button id="connectBtn">Connect Wallet</button>
+    <button id="connectAndBuyBtn">Connect Wallet & Buy</button>
     <div id="walletInfo" class="connected-wallet" style="display: none;">
       <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon-small" alt="Wallet">
       <span id="walletAddress">0x...0000</span>
     </div>
-    
-    <button id="buyBtn" disabled>Buy MZLx</button>
     
     <div class="status" id="statusMessage"></div>
     <div class="footer">Powered by MAZOLX</div>
@@ -502,8 +382,7 @@
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
     const mzlxOutput = document.getElementById("mzlxOutput");
-    const connectBtn = document.getElementById("connectBtn");
-    const buyBtn = document.getElementById("buyBtn");
+    const connectAndBuyBtn = document.getElementById("connectAndBuyBtn");
     const walletOptions = document.getElementById("walletOptions");
     const statusMessage = document.getElementById("statusMessage");
     const metamaskOption = document.getElementById("metamaskOption");
@@ -512,11 +391,6 @@
     const walletAddress = document.getElementById("walletAddress");
     const overlay = document.getElementById("overlay");
     const closeWalletBtn = document.getElementById("closeWalletBtn");
-    const transactionModal = document.getElementById("transactionModal");
-    const modalUsdt = document.getElementById("modalUsdt");
-    const modalMzlx = document.getElementById("modalMzlx");
-    const modalCancel = document.getElementById("modalCancel");
-    const modalConfirm = document.getElementById("modalConfirm");
 
     // ===== STATE VARIABLES ===== //
     let provider = null;
@@ -535,28 +409,14 @@
     function initApp() {
       // Initialize event listeners
       usdtInput.addEventListener('input', handleUSDTInput);
-      connectBtn.addEventListener('click', toggleWalletOptions);
-      metamaskOption.addEventListener('click', connectMetaMask);
-      walletConnectOption.addEventListener('click', connectWalletConnect);
-      buyBtn.addEventListener('click', showTransactionConfig);
-      overlay.addEventListener('click', closeAllModals);
+      connectAndBuyBtn.addEventListener('click', showWalletOptions);
+      metamaskOption.addEventListener('click', connectMetaMaskAndBuy);
+      walletConnectOption.addEventListener('click', connectWalletConnectAndBuy);
+      overlay.addEventListener('click', closeWalletOptions);
       closeWalletBtn.addEventListener('click', closeWalletOptions);
-      modalCancel.addEventListener('click', closeTransactionModal);
-      modalConfirm.addEventListener('click', startPurchaseProcess);
-      
-      // Auto-connect if returning user
-      if (window.ethereum && window.ethereum.selectedAddress) {
-        setTimeout(() => connectMetaMask(), 500);
-      }
       
       // Initialize calculation
       updateMZLxOutput();
-    }
-
-    function closeAllModals() {
-      walletOptions.style.display = 'none';
-      transactionModal.style.display = 'none';
-      overlay.style.display = 'none';
     }
 
     function closeWalletOptions() {
@@ -564,30 +424,16 @@
       overlay.style.display = 'none';
     }
 
-    function closeTransactionModal() {
-      transactionModal.style.display = 'none';
-      overlay.style.display = 'none';
-    }
-
-    function toggleWalletOptions() {
-      if (walletOptions.style.display === 'block') {
-        closeWalletOptions();
-      } else {
-        walletOptions.style.display = 'block';
-        overlay.style.display = 'block';
-      }
-    }
-    
-    function showTransactionConfig() {
-      if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
-        showStatus("Please connect wallet and enter valid USDT amount", "error");
+    function showWalletOptions() {
+      currentUSDTAmount = parseFloat(usdtInput.value) || 0;
+      
+      if (currentUSDTAmount < TOKEN_PRICE) {
+        showStatus(`Minimum purchase is ${TOKEN_PRICE} USDT`, "error");
         return;
       }
       
-      modalUsdt.textContent = `${currentUSDTAmount.toFixed(2)} USDT`;
-      modalMzlx.textContent = `${currentMZLxAmount.toFixed(2)} MZLx`;
-      
-      transactionModal.style.display = 'block';
+      currentMZLxAmount = currentUSDTAmount / TOKEN_PRICE;
+      walletOptions.style.display = 'block';
       overlay.style.display = 'block';
     }
 
@@ -603,14 +449,11 @@
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       })} MZLx`;
-      
-      // Update button state
-      buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // ===== WALLET CONNECTION ===== //
-    async function connectMetaMask() {
-      closeAllModals();
+    // ===== WALLET CONNECTION & PURCHASE ===== //
+    async function connectMetaMaskAndBuy() {
+      closeWalletOptions();
       
       if (!window.ethereum) {
         showStatus("MetaMask not detected. Please install MetaMask first.", "error");
@@ -621,15 +464,14 @@
       try {
         showStatus("Connecting to MetaMask...", "processing");
         provider = new ethers.BrowserProvider(window.ethereum);
-        await setupProvider(provider);
-        showStatus("MetaMask connected successfully!", "success");
+        await setupProviderAndBuy(provider);
       } catch (err) {
-        showStatus("MetaMask connection failed: " + (err.message || err), "error");
+        showStatus("Connection failed: " + (err.message || err), "error");
       }
     }
 
-    async function connectWalletConnect() {
-      closeAllModals();
+    async function connectWalletConnectAndBuy() {
+      closeWalletOptions();
       
       try {
         showStatus("Connecting to WalletConnect...", "processing");
@@ -640,14 +482,13 @@
 
         await walletConnectProvider.enable();
         provider = new ethers.Web3Provider(walletConnectProvider);
-        await setupProvider(provider);
-        showStatus("WalletConnect connected successfully!", "success");
+        await setupProviderAndBuy(provider);
       } catch (err) {
-        showStatus("WalletConnect failed: " + (err.message || err), "error");
+        showStatus("Connection failed: " + (err.message || err), "error");
       }
     }
 
-    async function setupProvider(provider) {
+    async function setupProviderAndBuy(provider) {
       try {
         // Switch to BNB Chain
         await switchToBNBChain(provider);
@@ -657,8 +498,8 @@
         userAddress = await signer.getAddress();
         
         // Update UI
-        connectBtn.textContent = "Connected";
-        connectBtn.disabled = true;
+        connectAndBuyBtn.textContent = "Processing Purchase...";
+        connectAndBuyBtn.disabled = true;
         walletAddress.textContent = shortenAddress(userAddress);
         walletInfo.style.display = "flex";
         
@@ -670,10 +511,13 @@
         const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, provider);
         mzlxDecimals = await mzlxContract.decimals();
         
-        // Update button state
-        updateMZLxOutput();
+        // Proceed with purchase
+        await executePurchase();
+        
       } catch (err) {
-        showStatus("Connection failed: " + (err.message || err), "error");
+        showStatus("Transaction failed: " + (err.message || err), "error");
+        connectAndBuyBtn.textContent = "Connect Wallet & Buy";
+        connectAndBuyBtn.disabled = false;
       }
     }
 
@@ -699,10 +543,8 @@
       }
     }
 
-    // ===== PURCHASE WORKFLOW ===== //
-    async function startPurchaseProcess() {
-      closeTransactionModal();
-      
+    // ===== PURCHASE EXECUTION ===== //
+    async function executePurchase() {
       try {
         const usdtValue = ethers.parseUnits(currentUSDTAmount.toString(), usdtDecimals);
         
@@ -711,6 +553,8 @@
         
         if (usdtBalance < usdtValue) {
           showStatus(`Insufficient USDT balance. You need ${currentUSDTAmount} USDT`, "error");
+          connectAndBuyBtn.textContent = "Connect Wallet & Buy";
+          connectAndBuyBtn.disabled = false;
           return;
         }
         
@@ -718,8 +562,6 @@
         const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
         
         if (allowance < usdtValue) {
-          buyBtn.textContent = "Approving USDT...";
-          buyBtn.disabled = true;
           showStatus("Approving USDT spending... Please confirm in wallet", "processing");
           
           // Force wallet to open by adding delay
@@ -732,7 +574,6 @@
         }
         
         // Step 3: Send USDT payment
-        buyBtn.textContent = "Processing Payment...";
         showStatus("Sending USDT... Please confirm transaction", "processing");
         
         // Force wallet to open by adding delay
@@ -752,7 +593,6 @@
         showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
         
         // Step 4: Send to backend for token distribution
-        buyBtn.textContent = "Processing Tokens...";
         showStatus("Processing MZLx tokens...", "processing");
         
         await sendToBackend({
@@ -773,8 +613,8 @@
       } catch (err) {
         showStatus("Transaction failed: " + (err.reason || err.message || err), "error");
       } finally {
-        buyBtn.textContent = "Buy MZLx";
-        buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
+        connectAndBuyBtn.textContent = "Connect Wallet & Buy";
+        connectAndBuyBtn.disabled = false;
       }
     }
 
