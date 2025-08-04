@@ -33,6 +33,7 @@ const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // ===== ROUTES ===== //
 
@@ -48,7 +49,8 @@ app.get('/api/health', async (req, res) => {
       chainId: 56,
       adminWallet: adminWallet.address,
       mzlxBalance: formattedBalance,
-      network: 'BNB Smart Chain'
+      network: 'BNB Smart Chain',
+      lastChecked: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({ 
@@ -74,6 +76,17 @@ app.post('/api/purchase', async (req, res) => {
       return res.status(400).json({ error: 'Invalid transaction hash' });
     }
 
+    // Verify transaction
+    const tx = await provider.getTransaction(txHash);
+    if (!tx) {
+      return res.status(404).json({ error: 'Transaction not found' });
+    }
+
+    const receipt = await tx.wait();
+    if (receipt.status !== 1) {
+      return res.status(400).json({ error: 'Transaction failed on-chain' });
+    }
+
     // Send MZLx tokens
     const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
     const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
@@ -88,15 +101,23 @@ app.post('/api/purchase', async (req, res) => {
       message: 'MZLx tokens sent successfully',
       mzlxTxHash: sendTx.hash,
       mzlxAmount: mzlxAmount,
-      receiver: walletAddress
+      usdtAmount: usdtAmount,
+      receiver: walletAddress,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Purchase error:', error);
     res.status(500).json({ 
-      error: error.message || 'Internal server error'
+      error: error.message || 'Internal server error',
+      details: error.reason || undefined
     });
   }
+});
+
+// Redirect to frontend
+app.get('/', (req, res) => {
+  res.redirect('https://mazolx.github.io/mazol/');
 });
 
 // ===== START SERVER ===== //
@@ -104,5 +125,5 @@ app.listen(PORT, () => {
   console.log(`\n🚀 MAZOL Token Sale Backend running on port ${PORT}`);
   console.log(`🔐 Admin Wallet: ${adminWallet.address}`);
   console.log(`🔗 RPC Provider: ${BNB_RPC_URL}`);
-  console.log(`💎 MZLX Contract: ${MZLX_ADDRESS}\n`);
+  console.log(`💎 MZLX Contract: ${MZLX_ADDRESS}`);
 });
