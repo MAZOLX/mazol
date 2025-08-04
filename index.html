@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -313,7 +313,7 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // ===== WALLET CONNECTION ===== //
+    // ===== WALLET CONNECTION - FIXED SIGNER SETUP ===== //
     async function connectWallet(walletType) {
       walletOptions.style.display = 'none';
       
@@ -326,6 +326,14 @@
           await connectWalletConnect();
         }
         
+        // Verify signer initialization
+        if (!signer) {
+          throw new Error("Failed to initialize wallet signer");
+        }
+        
+        // Get address from signer
+        userAddress = await signer.getAddress();
+        
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
         walletAddress.textContent = shortenAddress(userAddress);
@@ -333,6 +341,7 @@
         
       } catch (err) {
         showStatus("Connection failed: " + (err.message || err), "error");
+        console.error("Connection error:", err);
       }
     }
 
@@ -345,9 +354,17 @@
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       userAddress = accounts[0];
       
+      // Initialize provider
       provider = new ethers.BrowserProvider(window.ethereum);
       await switchToBNBChain();
+      
+      // Get signer from provider
       signer = await provider.getSigner();
+      
+      // Verify signer
+      if (!signer || typeof signer.sendTransaction !== 'function') {
+        throw new Error("Failed to get wallet signer");
+      }
     }
 
     async function connectWalletConnect() {
@@ -365,8 +382,18 @@
       // Enable session
       await walletConnectProvider.enable();
       
+      // Initialize provider
       provider = new ethers.Web3Provider(walletConnectProvider);
+      
+      // Get signer
       signer = provider.getSigner();
+      
+      // Verify signer
+      if (!signer || typeof signer.sendTransaction !== 'function') {
+        throw new Error("Failed to get wallet signer");
+      }
+      
+      // Get address
       userAddress = await signer.getAddress();
     }
 
@@ -394,7 +421,7 @@
       }
     }
 
-    // ===== PURCHASE WORKFLOW ===== //
+    // ===== PURCHASE WORKFLOW - FIXED SIGNER USAGE ===== //
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
@@ -404,7 +431,20 @@
       try {
         showStatus("Preparing transaction...", "processing");
         
-        // Get USDT contract
+        // Reinitialize signer if needed
+        if (!signer) {
+          if (provider instanceof ethers.BrowserProvider) {
+            signer = await provider.getSigner();
+          } else {
+            signer = provider.getSigner();
+          }
+          
+          if (!signer) {
+            throw new Error("Wallet signer not available");
+          }
+        }
+        
+        // Get USDT contract with signer
         const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, signer);
         
         // Get decimals
@@ -440,6 +480,7 @@
         
       } catch (err) {
         showStatus("Transaction failed: " + (err.message || err), "error");
+        console.error("Transaction error:", err);
       }
     }
     
