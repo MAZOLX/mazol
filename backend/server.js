@@ -74,7 +74,9 @@ app.post('/api/purchase', async (req, res) => {
     }
 
     // Send MZLx tokens
-    const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), await mzlxContract.decimals());
+    const decimals = await mzlxContract.decimals();
+    const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), decimals);
+    
     const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
     const sendReceipt = await sendTx.wait();
     
