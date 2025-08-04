@@ -314,7 +314,7 @@
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const BNB_CHAIN_ID = 56;
-    const API_BASE_URL = "https://your-backend.onrender.com"; // UPDATE WITH YOUR BACKEND URL
+    const API_BASE_URL = "https://mazol.onrender.com"; // UPDATE WITH YOUR BACKEND URL
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -518,6 +518,9 @@
           buyBtn.disabled = true;
           showStatus("Approving USDT spending... Please confirm in wallet", "processing");
           
+          // Force wallet to open by adding delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
           await approveTx.wait();
           
@@ -527,6 +530,9 @@
         // Step 3: Send USDT payment
         buyBtn.textContent = "Processing Payment...";
         showStatus("Sending USDT... Please confirm transaction", "processing");
+        
+        // Force wallet to open by adding delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         const usdtTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
         const receipt = await usdtTx.wait();
