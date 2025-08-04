@@ -6,7 +6,7 @@ const { ethers } = require('ethers');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ===== CONFIGURATION ===== //
+// Configuration
 const BNB_RPC_URL = process.env.BNB_RPC_URL || 'https://bsc-dataseed.binance.org/';
 const MZLX_ADDRESS = process.env.MZLX_ADDRESS || '0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83';
 const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
@@ -20,32 +20,33 @@ if (!ADMIN_PRIVATE_KEY || !/^[0-9a-fA-F]{64}$/.test(ADMIN_PRIVATE_KEY)) {
 // Setup
 const provider = new ethers.JsonRpcProvider(BNB_RPC_URL);
 const adminWallet = new ethers.Wallet(ADMIN_PRIVATE_KEY, provider);
-const mzlxContract = new ethers.Contract(
-  MZLX_ADDRESS,
-  [
-    "function transfer(address to, uint256 amount) public returns (bool)",
-    "function balanceOf(address owner) view returns (uint256)",
-    "function decimals() view returns (uint8)"
-  ],
-  adminWallet
-);
+
+// ERC20 ABI
+const ERC20_ABI = [
+  "function transfer(address to, uint256 amount) public returns (bool)",
+  "function balanceOf(address owner) view returns (uint256)",
+  "function decimals() view returns (uint8)"
+];
+
+const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// ===== ROUTES ===== //
+// Routes
 app.get('/api/health', async (req, res) => {
   try {
-    const balance = await mzlxContract.balanceOf(adminWallet.address);
-    const decimals = await mzlxContract.decimals();
-    const formattedBalance = ethers.formatUnits(balance, decimals);
+    const [balance, decimals] = await Promise.all([
+      mzlxContract.balanceOf(adminWallet.address),
+      mzlxContract.decimals()
+    ]);
     
     res.json({ 
       status: 'active',
       chainId: 56,
       adminWallet: adminWallet.address,
-      mzlxBalance: formattedBalance,
+      mzlxBalance: ethers.formatUnits(balance, decimals),
       network: 'BNB Smart Chain'
     });
   } catch (error) {
@@ -65,23 +66,23 @@ app.post('/api/purchase', async (req, res) => {
       return res.status(400).json({ error: 'Invalid USDT amount' });
     }
 
-    // Send MZLx tokens
+    // Get decimals
     const decimals = await mzlxContract.decimals();
     const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), decimals);
     
-    const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
-    const sendReceipt = await sendTx.wait();
+    // Send tokens
+    const tx = await mzlxContract.transfer(walletAddress, mzlxValue);
+    const receipt = await tx.wait();
     
-    if (sendReceipt.status !== 1) {
-      return res.status(500).json({ error: 'Failed to send MZLx tokens' });
+    if (receipt.status !== 1) {
+      return res.status(500).json({ error: 'Transaction failed' });
     }
 
     res.json({
       success: true,
-      message: 'MZLx tokens sent successfully',
-      mzlxTxHash: sendTx.hash,
+      message: 'MZLx tokens sent',
+      transactionHash: tx.hash,
       mzlxAmount: mzlxAmount,
-      usdtAmount: usdtAmount,
       receiver: walletAddress
     });
 
@@ -95,9 +96,10 @@ app.get('/', (req, res) => {
   res.redirect('https://mazolx.github.io/mazol/');
 });
 
-// ===== START SERVER ===== //
+// Start server
 app.listen(PORT, () => {
   console.log(`\n🚀 MAZOL Token Sale Backend running on port ${PORT}`);
   console.log(`🔐 Admin Wallet: ${adminWallet.address}`);
+  console.log(`🔗 RPC: ${BNB_RPC_URL}`);
   console.log(`💎 MZLX Contract: ${MZLX_ADDRESS}`);
 });
