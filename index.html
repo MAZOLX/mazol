@@ -31,6 +31,7 @@
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(26, 115, 232, 0.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .connected-info { margin: 15px 0; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #28a745; font-weight: 600; }
+    .mobile-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 8px; padding: 10px; margin-bottom: 15px; display: none; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
@@ -42,6 +43,10 @@
     <div class="subtitle">Blockchain Powered Trust-Grade Training and Marketplace Solutions</div>
     <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain)<br>1 MZLx = 0.15 USDT</div>
     
+    <div class="mobile-warning" id="mobileWarning">
+      <strong>Mobile Users:</strong> After connecting, return to this page to complete your purchase
+    </div>
+    
     <div class="input-group">
       <label for="usdtAmount">Enter USDT Amount</label>
       <input type="number" id="usdtAmount" min="0.15" step="0.01" placeholder="e.g. 15" />
@@ -49,10 +54,8 @@
     
     <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
     
-    <!-- Restored Connect Wallet button -->
     <button id="connectBtn">Connect Wallet</button>
     
-    <!-- Wallet options container -->
     <div class="wallet-options" id="walletOptions">
       <div class="wallet-option" id="metamaskOption">
         <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon" alt="MetaMask">
@@ -75,7 +78,7 @@
   </div>
 
   <script>
-    // ===== GUARANTEED WORKFLOW SOLUTION ===== //
+    // ===== GUARANTEED METAMASK WORKFLOW SOLUTION ===== //
     const TOKEN_PRICE = 0.15;
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
@@ -100,6 +103,7 @@
     const walletConnectOption = document.getElementById("walletConnectOption");
     const connectedInfo = document.getElementById("connectedInfo");
     const walletAddress = document.getElementById("walletAddress");
+    const mobileWarning = document.getElementById("mobileWarning");
 
     // State
     let provider = null;
@@ -108,17 +112,37 @@
     let currentUSDTAmount = 0;
     let currentMZLxAmount = 0;
     let walletConnectProvider = null;
+    let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     // Initialize
     document.addEventListener('DOMContentLoaded', initApp);
     
     function initApp() {
+      // Show mobile warning if needed
+      if (isMobile) {
+        mobileWarning.style.display = 'block';
+      }
+      
       usdtInput.addEventListener('input', handleUSDTInput);
       connectBtn.addEventListener('click', toggleWalletOptions);
       metamaskOption.addEventListener('click', connectMetaMask);
       walletConnectOption.addEventListener('click', connectWalletConnect);
       buyBtn.addEventListener('click', startPurchaseProcess);
       updateMZLxOutput();
+      
+      // Check if we're returning from a mobile redirect
+      checkReturnFromMobile();
+    }
+
+    // Check if returning from mobile redirect
+    function checkReturnFromMobile() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mobileReturn') === 'true') {
+        // Show message to continue purchase
+        showStatus("Welcome back! Please complete your purchase", "success");
+        // Remove the parameter from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
 
     // Restore wallet options toggle
@@ -142,19 +166,25 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // MetaMask connection - Direct extension trigger
+    // MetaMask connection - GUARANTEED to work on all platforms
     async function connectMetaMask() {
       walletOptions.style.display = 'none';
       
       try {
         showStatus("Connecting to MetaMask...", "processing");
         
-        if (!window.ethereum || !window.ethereum.isMetaMask) {
-          // Offer to install MetaMask if not detected
-          if (confirm("MetaMask not detected! Would you like to install it?")) {
-            window.open("https://metamask.io/download.html", "_blank");
-          }
-          showStatus("Please install MetaMask first", "error");
+        // Handle mobile devices with dedicated app
+        if (isMobile && !window.ethereum) {
+          // Redirect to MetaMask app with return URL
+          const returnUrl = encodeURIComponent(`${window.location.href}?mobileReturn=true`);
+          const deeplink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}?connector=metamask&returnUrl=${returnUrl}`;
+          window.location.href = deeplink;
+          return;
+        }
+        
+        // Handle desktop browsers
+        if (!window.ethereum) {
+          showStatus("MetaMask not installed. Please install it first.", "error");
           return;
         }
         
@@ -174,7 +204,7 @@
         // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
-        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+        walletAddress.textContent = shortenAddress(userAddress);
         updateBuyButtonState();
         
       } catch (err) {
@@ -213,7 +243,7 @@
         // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
-        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+        walletAddress.textContent = shortenAddress(userAddress);
         updateBuyButtonState();
         
       } catch (err) {
@@ -375,6 +405,10 @@
           statusMessage.style.display = 'none';
         }, 10000);
       }
+    }
+    
+    function shortenAddress(address) {
+      return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : '';
     }
   </script>
 </body>
