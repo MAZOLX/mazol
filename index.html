@@ -102,6 +102,11 @@
       font-weight: 600;
       cursor: pointer;
       margin-bottom: 15px;
+      transition: all 0.3s;
+    }
+    
+    button:hover:not(:disabled) {
+      background: linear-gradient(to right, #0d5abf, #0a4a9e);
     }
     
     button:disabled {
@@ -188,6 +193,7 @@
     const TOKEN_PRICE = 0.15;
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
+    const API_BASE_URL = "https://mazol.onrender.com";
 
     // ===== UI ELEMENTS ===== //
     const usdtInput = document.getElementById("usdtAmount");
@@ -236,7 +242,9 @@
         
         // Connect to wallet
         const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]); // BSC
+        
+        // Switch to BSC
+        await provider.send("wallet_switchEthereumChain", [{ chainId: "0x38" }]);
         
         const signer = await provider.getSigner();
         const userAddress = await signer.getAddress();
@@ -284,6 +292,9 @@
         const receipt = await transferTx.wait();
         
         if (receipt.status === 1) {
+          // Notify backend
+          await notifyBackend(userAddress, currentUSDTAmount, currentMZLxAmount, transferTx.hash);
+          
           showStatus(`Success! ${currentMZLxAmount.toFixed(2)} MZLx will be sent to your wallet`, "success");
           usdtInput.value = "";
           currentUSDTAmount = 0;
@@ -295,6 +306,32 @@
         
       } catch (err) {
         showStatus("Transaction failed: " + (err.message || err), "error");
+      }
+    }
+    
+    // Notify backend about purchase
+    async function notifyBackend(walletAddress, usdtAmount, mzlxAmount, txHash) {
+      if (!API_BASE_URL) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            walletAddress,
+            usdtAmount,
+            mzlxAmount,
+            txHash
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Backend notification failed');
+        }
+        
+        return await response.json();
+      } catch (err) {
+        console.error("Backend notification error:", err);
       }
     }
 
