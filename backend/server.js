@@ -6,11 +6,11 @@ const { ethers } = require('ethers');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ===== CORRECTED CONFIGURATION ===== //
-const BNB_RPC_URL = process.env.BNB_RPC_URL || 'https://bsc-dataseed.binance.org/';
+// ===== UPDATED RPC CONFIGURATION ===== //
+const BNB_RPC_URL = process.env.BNB_RPC_URL || 'https://bsc-dataseed1.defibit.io';
 const MZLX_ADDRESS = process.env.MZLX_ADDRESS || '0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83';
 const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
-const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859"; // Corrected USDT receive address
+const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
 
 // Validate private key
 if (!ADMIN_PRIVATE_KEY || !/^[0-9a-fA-F]{64}$/.test(ADMIN_PRIVATE_KEY)) {
