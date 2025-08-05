@@ -73,17 +73,15 @@
   </div>
 
   <script>
-    // ===== GUARANTEED WORKFLOW SOLUTION ===== //
+    // ===== CORRECTED CONFIGURATION ===== //
     const TOKEN_PRICE = 0.15;
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
-    const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
+    const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859"; // Corrected USDT receive address
     const API_BASE_URL = "https://mazol.onrender.com";
     const BNB_CHAIN_ID = 56;
     const USDT_ABI = [
       "function decimals() view returns (uint8)",
       "function balanceOf(address owner) view returns (uint256)",
-      "function allowance(address owner, address spender) view returns (uint256)",
-      "function approve(address spender, uint256 amount) public returns (bool)",
       "function transfer(address to, uint256 amount) public returns (bool)"
     ];
 
@@ -146,6 +144,11 @@
       
       try {
         if (!window.ethereum) {
+          // Open MetaMask directly in wallet browsers
+          if (window.trustwallet || window.ethereum.isTrust) {
+            window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+            return;
+          }
           throw new Error("Please install MetaMask first");
         }
         
@@ -165,7 +168,7 @@
         // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
-        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+        walletAddress.textContent = shortenAddress(userAddress);
         updateBuyButtonState();
         
       } catch (err) {
@@ -202,7 +205,7 @@
         // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
-        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+        walletAddress.textContent = shortenAddress(userAddress);
         updateBuyButtonState();
         
       } catch (err) {
@@ -232,7 +235,7 @@
       }
     }
 
-    // Purchase Process - SEAMLESS workflow
+    // Purchase Process - CORRECTED workflow
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
@@ -265,21 +268,9 @@
           return;
         }
         
-        // Check allowance
-        const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
-        if (allowance < usdtValue) {
-          showStatus("Approval needed. Please confirm in your wallet...", "processing");
-          
-          // Trigger wallet's native approval interface
-          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
-          await approveTx.wait();
-          
-          showStatus("USDT spending approved!", "success");
-        }
-        
         showStatus("Sending USDT. Please confirm in your wallet...", "processing");
         
-        // Trigger wallet's native transfer interface
+        // Transfer USDT directly to receiver address
         const transferTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
         const receipt = await transferTx.wait();
         
@@ -346,6 +337,10 @@
           statusMessage.style.display = 'none';
         }, 10000);
       }
+    }
+    
+    function shortenAddress(address) {
+      return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : '';
     }
   </script>
 </body>
