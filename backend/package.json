@@ -1,7 +1,7 @@
- {
+{
   "name": "mazol-token-sale-backend",
   "version": "1.0.0",
-  "description": "Backend for MAZOL Token Sale",
+  "description": "Backend for MAZOL Token Sale Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
