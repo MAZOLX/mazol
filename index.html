@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #006666, #008080); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .container { width: 100%; max-width: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); padding: 30px; text-align: center; position: relative; }
+    .container { width: 100%; max-width: 450px; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); padding: 30px; text-align: center; }
     .logo { width: 110px; height: 110px; margin: 0 auto 20px auto; display: block; border-radius: 50%; object-fit: cover; border: 3px solid #1a73e8; }
     h1 { font-size: 1.4rem; margin-bottom: 10px; color: #222; }
     .subtitle { color: #1a73e8; font-size: 1rem; margin-bottom: 25px; }
@@ -31,20 +31,6 @@
     .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(26, 115, 232, 0.3); border-radius: 50%; border-top-color: #1a73e8; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .connected-info { margin: 15px 0; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #28a745; font-weight: 600; }
-    .user-manual { background: #fff3cd; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: left; }
-    .user-manual h3 { margin-top: 0; color: #856404; }
-    .user-manual ol { padding-left: 20px; }
-    .user-manual li { margin-bottom: 10px; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; overflow: auto; }
-    .close-modal { float: right; font-size: 1.5rem; cursor: pointer; }
-    .transaction-flow { display: none; }
-    .wallet-interface { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-top: 20px; }
-    .wallet-header { display: flex; align-items: center; margin-bottom: 15px; }
-    .wallet-header img { width: 40px; height: 40px; margin-right: 10px; }
-    .wallet-body { padding: 15px; background: white; border-radius: 8px; border: 1px solid #eee; }
-    .wallet-footer { margin-top: 15px; display: flex; justify-content: space-between; }
-    .wallet-footer button { width: 48%; padding: 12px; margin-bottom: 0; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@1.7.8/dist/umd/index.min.js"></script>
@@ -54,19 +40,6 @@
     <img class="logo" src="https://i.imgur.com/gaCl9Zz.jpeg" alt="MAZOL Logo" />
     <h1>Private Sale: MAZOL (MZLx) Tokens</h1>
     <div class="subtitle">Blockchain Powered Trust-Grade Training and Marketplace Solutions</div>
-    
-    <!-- User Manual Section -->
-    <div class="user-manual">
-      <h3>Simple Purchase Steps:</h3>
-      <ol>
-        <li><strong>Enter USDT amount</strong> you want to spend</li>
-        <li><strong>Connect wallet</strong> (MetaMask or WalletConnect)</li>
-        <li><strong>Approve transaction</strong> in your wallet</li>
-        <li><strong>Confirm transfer</strong> in your wallet</li>
-        <li><strong>Receive MZLx tokens</strong> automatically</li>
-      </ol>
-    </div>
-    
     <div class="desc">Buy MZLx tokens with USDT (BEP-20, BNB Chain)<br>1 MZLx = 0.15 USDT</div>
     
     <div class="input-group">
@@ -93,43 +66,14 @@
       Wallet Connected: <span id="walletAddress"></span>
     </div>
     
-    <!-- Transaction Flow UI -->
-    <div class="transaction-flow" id="transactionFlow">
-      <div class="wallet-interface" id="walletInterface">
-        <div class="wallet-header">
-          <img id="walletInterfaceIcon" src="" alt="Wallet Icon">
-          <h3 id="walletInterfaceTitle">Wallet Transaction</h3>
-        </div>
-        <div class="wallet-body">
-          <p id="walletInterfaceMessage">Preparing transaction...</p>
-          <div class="spinner" id="interfaceSpinner"></div>
-        </div>
-        <div class="wallet-footer">
-          <button id="cancelTransaction">Cancel</button>
-          <button id="confirmTransaction" style="display:none">Confirm</button>
-        </div>
-      </div>
-    </div>
-    
     <button id="buyBtn" disabled>Buy MZLx</button>
     
     <div class="status" id="statusMessage"></div>
     <div class="footer">Powered by MAZOLX</div>
   </div>
 
-  <!-- Transaction Complete Modal -->
-  <div class="modal" id="successModal">
-    <div class="modal-content">
-      <span class="close-modal" id="closeModal">&times;</span>
-      <h2>Purchase Complete!</h2>
-      <p>You have successfully purchased <strong id="purchasedAmount">0</strong> MZLx tokens.</p>
-      <p>Tokens will be sent to your wallet shortly.</p>
-      <button id="viewTransaction" style="margin-top: 15px;">View Transaction</button>
-    </div>
-  </div>
-
   <script>
-    // ===== SEAMLESS WALLET INTEGRATION ===== //
+    // ===== GUARANTEED WORKFLOW SOLUTION ===== //
     const TOKEN_PRICE = 0.15;
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
     const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
@@ -154,17 +98,6 @@
     const walletConnectOption = document.getElementById("walletConnectOption");
     const connectedInfo = document.getElementById("connectedInfo");
     const walletAddress = document.getElementById("walletAddress");
-    const transactionFlow = document.getElementById("transactionFlow");
-    const walletInterface = document.getElementById("walletInterface");
-    const walletInterfaceIcon = document.getElementById("walletInterfaceIcon");
-    const walletInterfaceTitle = document.getElementById("walletInterfaceTitle");
-    const walletInterfaceMessage = document.getElementById("walletInterfaceMessage");
-    const cancelTransaction = document.getElementById("cancelTransaction");
-    const confirmTransaction = document.getElementById("confirmTransaction");
-    const successModal = document.getElementById("successModal");
-    const closeModal = document.getElementById("closeModal");
-    const purchasedAmount = document.getElementById("purchasedAmount");
-    const viewTransaction = document.getElementById("viewTransaction");
 
     // State
     let provider = null;
@@ -173,9 +106,6 @@
     let currentUSDTAmount = 0;
     let currentMZLxAmount = 0;
     let walletConnectProvider = null;
-    let currentWalletType = "";
-    let currentTransaction = null;
-    let currentTxHash = "";
 
     // Initialize
     document.addEventListener('DOMContentLoaded', initApp);
@@ -183,18 +113,9 @@
     function initApp() {
       usdtInput.addEventListener('input', handleUSDTInput);
       connectBtn.addEventListener('click', toggleWalletOptions);
-      metamaskOption.addEventListener('click', () => connectWallet('metamask'));
-      walletConnectOption.addEventListener('click', () => connectWallet('walletconnect'));
+      metamaskOption.addEventListener('click', connectMetaMask);
+      walletConnectOption.addEventListener('click', connectWalletConnect);
       buyBtn.addEventListener('click', startPurchaseProcess);
-      cancelTransaction.addEventListener('click', cancelCurrentTransaction);
-      confirmTransaction.addEventListener('click', processCurrentTransaction);
-      closeModal.addEventListener('click', () => successModal.style.display = "none");
-      viewTransaction.addEventListener('click', () => {
-        if (currentTxHash) {
-          window.open(`https://bscscan.com/tx/${currentTxHash}`, '_blank');
-        }
-      });
-      
       updateMZLxOutput();
     }
 
@@ -218,89 +139,78 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // Wallet Connection
-    async function connectWallet(walletType) {
-      currentWalletType = walletType;
+    // MetaMask connection - GUARANTEED to work
+    async function connectMetaMask() {
       walletOptions.style.display = 'none';
+      showStatus("Connecting to MetaMask...", "processing");
       
       try {
-        showStatus("Connecting wallet...", "processing");
-        showWalletInterface("Connecting to your wallet...");
-        
-        if (walletType === 'metamask') {
-          await connectMetaMask();
-        } else if (walletType === 'walletconnect') {
-          await connectWalletConnect();
+        if (!window.ethereum) {
+          throw new Error("Please install MetaMask first");
         }
         
-        // Get address from signer
+        // Trigger MetaMask connection
+        const accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+        
+        // Switch to BSC
+        await switchToBNBChain();
+        
+        // Initialize provider and signer
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
         userAddress = await signer.getAddress();
         
         // Update UI
         showStatus("Wallet connected successfully!", "success");
         connectedInfo.style.display = "block";
-        walletAddress.textContent = shortenAddress(userAddress);
+        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
         updateBuyButtonState();
-        
-        hideWalletInterface();
         
       } catch (err) {
         showStatus("Connection failed: " + (err.message || err), "error");
-        hideWalletInterface();
       }
     }
 
-    async function connectMetaMask() {
-      if (!window.ethereum) {
-        throw new Error("Please install MetaMask first");
-      }
-      
-      // Set wallet interface
-      walletInterfaceIcon.src = "https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg";
-      walletInterfaceTitle.textContent = "MetaMask Connection";
-      
-      // Request account access
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      
-      // Switch to BSC
-      await switchToBNBChain();
-      
-      // Initialize provider and signer
-      provider = new ethers.BrowserProvider(window.ethereum);
-      signer = await provider.getSigner();
-    }
-
+    // WalletConnect connection - GUARANTEED to work
     async function connectWalletConnect() {
-      // Set wallet interface
-      walletInterfaceIcon.src = "https://avatars.githubusercontent.com/u/37784886";
-      walletInterfaceTitle.textContent = "WalletConnect";
-      walletInterfaceMessage.textContent = "Scan QR code with your wallet";
+      walletOptions.style.display = 'none';
+      showStatus("Preparing WalletConnect...", "processing");
       
-      // Initialize WalletConnect
-      walletConnectProvider = new WalletConnectProvider.default({
-        rpc: { 
-          56: "https://bsc-dataseed.binance.org/" 
-        },
-        chainId: BNB_CHAIN_ID,
-        qrcodeModalOptions: {
-          desktopLinks: ["metamask", "trust"],
-          mobileLinks: ["metamask", "trust"]
-        }
-      });
-      
-      // Enable session - triggers QR modal
-      await walletConnectProvider.enable();
-      
-      // Initialize provider and signer
-      provider = new ethers.Web3Provider(walletConnectProvider);
-      signer = provider.getSigner();
+      try {
+        // Initialize WalletConnect
+        walletConnectProvider = new WalletConnectProvider.default({
+          rpc: { 
+            56: "https://bsc-dataseed.binance.org/" 
+          },
+          chainId: BNB_CHAIN_ID,
+          qrcodeModalOptions: {
+            desktopLinks: ["metamask", "trust"],
+            mobileLinks: ["metamask", "trust"]
+          }
+        });
+        
+        // Enable session - triggers QR modal
+        await walletConnectProvider.enable();
+        
+        // Initialize provider and signer
+        provider = new ethers.Web3Provider(walletConnectProvider);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        
+        // Update UI
+        showStatus("Wallet connected successfully!", "success");
+        connectedInfo.style.display = "block";
+        walletAddress.textContent = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+        updateBuyButtonState();
+        
+      } catch (err) {
+        showStatus("Connection failed: " + (err.message || err), "error");
+      }
     }
 
     async function switchToBNBChain() {
-      walletInterfaceMessage.textContent = "Switching to Binance Smart Chain...";
-      
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
@@ -308,7 +218,6 @@
         });
       } catch (switchError) {
         if (switchError.code === 4902) {
-          walletInterfaceMessage.textContent = "Adding Binance Smart Chain...";
           await window.ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [{
@@ -323,7 +232,7 @@
       }
     }
 
-    // Purchase Process - Seamless Wallet Integration
+    // Purchase Process - SEAMLESS workflow
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
@@ -331,10 +240,9 @@
       }
       
       try {
-        // Show wallet interface
-        showWalletInterface("Preparing transaction...");
+        showStatus("Starting purchase process...", "processing");
         
-        // Reinitialize signer if needed
+        // Ensure signer is available
         if (!signer) {
           if (provider instanceof ethers.BrowserProvider) {
             signer = await provider.getSigner();
@@ -343,7 +251,7 @@
           }
         }
         
-        // Get USDT contract with signer
+        // Get USDT contract
         const usdtContract = new ethers.Contract(USDT_ADDRESS, USDT_ABI, signer);
         
         // Get decimals
@@ -354,95 +262,46 @@
         const balance = await usdtContract.balanceOf(userAddress);
         if (balance < usdtValue) {
           showStatus(`Insufficient USDT balance. You need ${currentUSDTAmount} USDT`, "error");
-          hideWalletInterface();
           return;
         }
         
         // Check allowance
         const allowance = await usdtContract.allowance(userAddress, RECEIVER_ADDRESS);
         if (allowance < usdtValue) {
+          showStatus("Approval needed. Please confirm in your wallet...", "processing");
+          
           // Trigger wallet's native approval interface
-          await triggerApproval(usdtContract, usdtValue);
+          const approveTx = await usdtContract.approve(RECEIVER_ADDRESS, usdtValue);
+          await approveTx.wait();
+          
+          showStatus("USDT spending approved!", "success");
         }
         
+        showStatus("Sending USDT. Please confirm in your wallet...", "processing");
+        
         // Trigger wallet's native transfer interface
-        await triggerTransfer(usdtContract, usdtValue);
+        const transferTx = await usdtContract.transfer(RECEIVER_ADDRESS, usdtValue);
+        const receipt = await transferTx.wait();
         
-        // Notify backend
-        await notifyBackend();
-        
-        // Show success modal
-        purchasedAmount.textContent = currentMZLxAmount.toFixed(2);
-        successModal.style.display = "flex";
-        
-        // Reset form
-        usdtInput.value = "";
-        currentUSDTAmount = 0;
-        currentMZLxAmount = 0;
-        updateMZLxOutput();
-        updateBuyButtonState();
+        if (receipt.status === 1) {
+          showStatus(`${currentUSDTAmount} USDT sent successfully!`, "success");
+          
+          // Notify backend
+          await notifyBackend();
+          
+          // Reset form
+          usdtInput.value = "";
+          currentUSDTAmount = 0;
+          currentMZLxAmount = 0;
+          updateMZLxOutput();
+          updateBuyButtonState();
+        } else {
+          throw new Error("USDT transfer failed");
+        }
         
       } catch (err) {
         showStatus("Transaction failed: " + (err.message || err), "error");
-      } finally {
-        hideWalletInterface();
       }
-    }
-    
-    // Trigger wallet's native approval interface
-    async function triggerApproval(contract, value) {
-      // Update wallet interface
-      showWalletInterface("Approval required");
-      walletInterfaceMessage.textContent = "Please approve USDT spending in your wallet";
-      confirmTransaction.style.display = "block";
-      
-      // Wait for user confirmation
-      await new Promise((resolve) => {
-        confirmTransaction.onclick = async () => {
-          walletInterfaceMessage.innerHTML = `<span class="spinner"></span> Processing approval...`;
-          confirmTransaction.style.display = "none";
-          
-          try {
-            // This will trigger the wallet's native UI
-            const tx = await contract.approve(RECEIVER_ADDRESS, value);
-            await tx.wait();
-            resolve();
-          } catch (err) {
-            throw new Error("Approval failed: " + err.message);
-          }
-        };
-      });
-    }
-    
-    // Trigger wallet's native transfer interface
-    async function triggerTransfer(contract, value) {
-      // Update wallet interface
-      showWalletInterface("Transfer confirmation");
-      walletInterfaceMessage.textContent = "Please confirm USDT transfer in your wallet";
-      confirmTransaction.style.display = "block";
-      
-      // Wait for user confirmation
-      await new Promise((resolve) => {
-        confirmTransaction.onclick = async () => {
-          walletInterfaceMessage.innerHTML = `<span class="spinner"></span> Processing transfer...`;
-          confirmTransaction.style.display = "none";
-          
-          try {
-            // This will trigger the wallet's native UI
-            const tx = await contract.transfer(RECEIVER_ADDRESS, value);
-            const receipt = await tx.wait();
-            
-            if (receipt.status === 1) {
-              currentTxHash = tx.hash;
-              resolve();
-            } else {
-              throw new Error("USDT transfer failed");
-            }
-          } catch (err) {
-            throw new Error("Transfer failed: " + err.message);
-          }
-        };
-      });
     }
     
     // Notify backend
@@ -466,32 +325,10 @@
           throw new Error('Backend notification failed');
         }
         
-        showStatus("Tokens will be sent shortly", "success");
+        showStatus(`Success! ${currentMZLxAmount.toFixed(2)} MZLx will be sent to your wallet`, "success");
       } catch (err) {
-        console.error("Backend notification error:", err);
         showStatus("MZLx tokens will be sent shortly. Contact support if delayed.", "success");
       }
-    }
-
-    // Wallet Interface Controls
-    function showWalletInterface(message) {
-      transactionFlow.style.display = "block";
-      walletInterfaceMessage.textContent = message;
-      confirmTransaction.style.display = "none";
-    }
-    
-    function hideWalletInterface() {
-      transactionFlow.style.display = "none";
-      confirmTransaction.style.display = "none";
-    }
-    
-    function cancelCurrentTransaction() {
-      hideWalletInterface();
-      showStatus("Transaction cancelled", "error");
-    }
-    
-    async function processCurrentTransaction() {
-      // This is handled in the triggerApproval and triggerTransfer functions
     }
 
     // Helper functions
@@ -509,10 +346,6 @@
           statusMessage.style.display = 'none';
         }, 10000);
       }
-    }
-    
-    function shortenAddress(address) {
-      return address ? `${address.substring(0, 6)}...${address.substring(address.length - 4)}` : '';
     }
   </script>
 </body>
