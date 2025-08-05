@@ -1,4 +1,4 @@
- require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { ethers } = require('ethers');
@@ -6,10 +6,11 @@ const { ethers } = require('ethers');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuration
+// ===== CORRECTED CONFIGURATION ===== //
 const BNB_RPC_URL = process.env.BNB_RPC_URL || 'https://bsc-dataseed.binance.org/';
 const MZLX_ADDRESS = process.env.MZLX_ADDRESS || '0x49F4a728BD98480E92dBfc6a82d595DA9d1F7b83';
 const ADMIN_PRIVATE_KEY = process.env.ADMIN_PRIVATE_KEY;
+const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859"; // Corrected USDT receive address
 
 // Validate private key
 if (!ADMIN_PRIVATE_KEY || !/^[0-9a-fA-F]{64}$/.test(ADMIN_PRIVATE_KEY)) {
@@ -34,26 +35,33 @@ const mzlxContract = new ethers.Contract(MZLX_ADDRESS, ERC20_ABI, adminWallet);
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// ===== ROUTES ===== //
+
+// Health Check
 app.get('/api/health', async (req, res) => {
   try {
-    const [balance, decimals] = await Promise.all([
-      mzlxContract.balanceOf(adminWallet.address),
-      mzlxContract.decimals()
-    ]);
+    const balance = await mzlxContract.balanceOf(adminWallet.address);
+    const decimals = await mzlxContract.decimals();
+    const formattedBalance = ethers.formatUnits(balance, decimals);
     
     res.json({ 
       status: 'active',
       chainId: 56,
       adminWallet: adminWallet.address,
-      mzlxBalance: ethers.formatUnits(balance, decimals),
-      network: 'BNB Smart Chain'
+      mzlxBalance: formattedBalance,
+      network: 'BNB Smart Chain',
+      usdtReceiver: RECEIVER_ADDRESS,
+      lastChecked: new Date().toISOString()
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch balance' });
+    res.status(500).json({ 
+      error: 'Failed to fetch balance',
+      details: error.message 
+    });
   }
 });
 
+// Purchase Endpoint
 app.post('/api/purchase', async (req, res) => {
   try {
     const { walletAddress, usdtAmount, mzlxAmount } = req.body;
@@ -66,40 +74,46 @@ app.post('/api/purchase', async (req, res) => {
       return res.status(400).json({ error: 'Invalid USDT amount' });
     }
 
-    // Get decimals
+    // Send MZLx tokens
     const decimals = await mzlxContract.decimals();
     const mzlxValue = ethers.parseUnits(mzlxAmount.toString(), decimals);
     
-    // Send tokens
-    const tx = await mzlxContract.transfer(walletAddress, mzlxValue);
-    const receipt = await tx.wait();
+    const sendTx = await mzlxContract.transfer(walletAddress, mzlxValue);
+    const sendReceipt = await sendTx.wait();
     
-    if (receipt.status !== 1) {
-      return res.status(500).json({ error: 'Transaction failed' });
+    if (sendReceipt.status !== 1) {
+      return res.status(500).json({ error: 'Failed to send MZLx tokens' });
     }
 
     res.json({
       success: true,
-      message: 'MZLx tokens sent',
-      transactionHash: tx.hash,
+      message: 'MZLx tokens sent successfully',
+      mzlxTxHash: sendTx.hash,
       mzlxAmount: mzlxAmount,
-      receiver: walletAddress
+      usdtAmount: usdtAmount,
+      receiver: walletAddress,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Purchase error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: error.message || 'Internal server error',
+      details: error.reason || undefined
+    });
   }
 });
 
+// Redirect to frontend
 app.get('/', (req, res) => {
   res.redirect('https://mazolx.github.io/mazol/');
 });
 
-// Start server
+// ===== START SERVER ===== //
 app.listen(PORT, () => {
   console.log(`\n🚀 MAZOL Token Sale Backend running on port ${PORT}`);
   console.log(`🔐 Admin Wallet: ${adminWallet.address}`);
-  console.log(`🔗 RPC: ${BNB_RPC_URL}`);
+  console.log(`💰 USDT Receiver: ${RECEIVER_ADDRESS}`);
+  console.log(`🔗 RPC Provider: ${BNB_RPC_URL}`);
   console.log(`💎 MZLX Contract: ${MZLX_ADDRESS}`);
 });
