@@ -76,7 +76,7 @@
     // ===== CORRECTED CONFIGURATION ===== //
     const TOKEN_PRICE = 0.15;
     const USDT_ADDRESS = "0x55d398326f99059fF775485246999027B3197955";
-    const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859"; // Corrected USDT receive address
+    const RECEIVER_ADDRESS = "0x4bd6033bCe207fa4F5a2Bd4d003a690ed4c3D859";
     const API_BASE_URL = "https://mazol.onrender.com";
     const BNB_CHAIN_ID = 56;
     const USDT_ABI = [
@@ -137,7 +137,7 @@
       buyBtn.disabled = !userAddress || currentUSDTAmount < TOKEN_PRICE;
     }
 
-    // MetaMask connection - GUARANTEED to work
+    // MetaMask connection
     async function connectMetaMask() {
       walletOptions.style.display = 'none';
       showStatus("Connecting to MetaMask...", "processing");
@@ -176,16 +176,16 @@
       }
     }
 
-    // WalletConnect connection - GUARANTEED to work
+    // WalletConnect connection
     async function connectWalletConnect() {
       walletOptions.style.display = 'none';
       showStatus("Preparing WalletConnect...", "processing");
       
       try {
-        // Initialize WalletConnect
+        // Initialize WalletConnect with new RPC
         walletConnectProvider = new WalletConnectProvider.default({
           rpc: { 
-            56: "https://bsc-dataseed.binance.org/" 
+            56: "https://bsc-dataseed1.defibit.io" 
           },
           chainId: BNB_CHAIN_ID,
           qrcodeModalOptions: {
@@ -227,7 +227,7 @@
               chainId: '0x38',
               chainName: 'Binance Smart Chain',
               nativeCurrency: { name: 'BNB', symbol: 'bnb', decimals: 18 },
-              rpcUrls: ['https://bsc-dataseed.binance.org/'],
+              rpcUrls: ['https://bsc-dataseed1.defibit.io'],
               blockExplorerUrls: ['https://bscscan.com']
             }]
           });
@@ -235,7 +235,7 @@
       }
     }
 
-    // Purchase Process - CORRECTED workflow
+    // Purchase Process
     async function startPurchaseProcess() {
       if (!userAddress || currentUSDTAmount < TOKEN_PRICE) {
         showStatus("Please connect wallet and enter valid USDT amount", "error");
